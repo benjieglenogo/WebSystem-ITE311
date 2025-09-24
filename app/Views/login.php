@@ -22,7 +22,7 @@
             <div class="card-body p-4">
                 <form action="<?= base_url('login') ?>" method="post">
                     <div class="mb-3">
-                        <label for="email" class="form-label fw-semibold">Email</label>
+                        <label for="email" class="form-label fw-semibold">username</label>
                         <input type="email" 
                                class="form-control form-control-lg rounded-3" 
                                id="email" 

@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Controllers;
@@ -13,17 +12,17 @@ class Auth extends BaseController
         $model = new UserModel();
 
         if ($this->request->getMethod() === 'post') {
-            $username = $this->request->getPost('username');
+            $email = $this->request->getPost('email');
             $password = $this->request->getPost('password');
 
-            // Find user by username
-            $user = $model->where('username', $username)->first();
+            // Find user by email
+            $user = $model->where('email', $email)->first();
 
             if ($user && password_verify($password, $user['password'])) {
                 // Store session data
                 $session->set([
                     'id'         => $user['id'],
-                    'username'   => $user['username'],
+                    'email'   => $user['email'],
                     'role'       => $user['role'],
                     'isLoggedIn' => true,
                 ]);
