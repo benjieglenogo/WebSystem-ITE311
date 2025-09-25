@@ -45,11 +45,7 @@
             </div>
         </div>
 
-        <!-- Register Link -->
-        <p class="text-center mt-3 small text-muted">
-            Don’t have an account? 
-            <a href="<?= base_url('register') ?>" class="fw-semibold text-decoration-none">Register</a>
-        </p>
+        
     </div>
 </div>
 <?= $this->endSection() ?>

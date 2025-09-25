@@ -27,29 +27,29 @@ class Auth extends BaseController
                     'isLoggedIn' => true,
                 ]);
 
-                // Redirect based on role
-                switch ($user['role']) {
-                    case 'admin':
-                        return redirect()->to('/admin/dashboard');
-                    case 'teacher':
-                        return redirect()->to('/teacher/dashboard');
-                    case 'student':
-                        return redirect()->to('/student/dashboard');
-                    default:
-                        return redirect()->to('/login');
-                }
+                // Redirect to unified dashboard
+                return redirect()->to('/dashboard');
             } else {
                 $session->setFlashdata('error', 'Invalid login credentials');
                 return redirect()->back();
             }
         }
 
-        return view('auth/login');
+        return view('login');
     }
 
     public function logout()
     {
         session()->destroy();
         return redirect()->to('/login');
+    }
+
+    public function dashboard()
+    {
+        if (! session('isLoggedIn')) {
+            return redirect()->to('/login');
+        }
+
+        return view('auth/dashboard');
     }
 }
