@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="row justify-content-center mt-4">
     <div class="col-md-6 col-lg-5">
-        <h1 class="text-center mb-4 text-primary fw-bold">Welcome Back</h1>
+        <h1 class="text-center mb-4 text-primary fw-bold">Login View Working<</h1>
 
         <?php if (session()->getFlashdata('register_success')): ?>
             <div class="alert alert-success shadow-sm" role="alert">
@@ -45,7 +45,11 @@
             </div>
         </div>
 
-        
+        <!-- Register Link -->
+        <p class="text-center mt-3 small text-muted">
+            Don’t have an account? 
+            <a href="<?= base_url('register') ?>" class="fw-semibold text-decoration-none">Register</a>
+        </p>
     </div>
 </div>
 <?= $this->endSection() ?>
