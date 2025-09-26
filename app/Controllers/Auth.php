@@ -8,11 +8,12 @@ class Auth extends BaseController
 {
     public function login()
     {
+        helper(['form']); // make sure form helper is loaded
         $session = session();
         $model = new UserModel();
 
         if ($this->request->getMethod() === 'post') {
-            $email = $this->request->getPost('email');
+            $email    = $this->request->getPost('email');
             $password = $this->request->getPost('password');
 
             // Find user by email
@@ -22,21 +23,20 @@ class Auth extends BaseController
                 // Store session data
                 $session->set([
                     'id'         => $user['id'],
-                    'email'   => $user['email'],
+                    'email'      => $user['email'],
                     'role'       => $user['role'],
                     'isLoggedIn' => true,
                 ]);
 
                 // Redirect based on role
-                switch ($user['role']) {
-                    case 'admin':
-                        return redirect()->to('/admin/dashboard');
-                    case 'teacher':
-                        return redirect()->to('/teacher/dashboard');
-                    case 'student':
-                        return redirect()->to('/student/dashboard');
-                    default:
-                        return redirect()->to('/login');
+                if ($user['role'] === 'admin') {
+                    return redirect()->to('/admin/dashboard');
+                } elseif ($user['role'] === 'teacher') {
+                    return redirect()->to('/teacher/dashboard');
+                } elseif ($user['role'] === 'student') {
+                    return redirect()->to('/student/dashboard');
+                } else {
+                    return redirect()->to('/login');
                 }
             } else {
                 $session->setFlashdata('error', 'Invalid login credentials');
@@ -44,6 +44,7 @@ class Auth extends BaseController
             }
         }
 
+        // Show login form
         return view('auth/login');
     }
 

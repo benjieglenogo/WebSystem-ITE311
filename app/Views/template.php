@@ -76,7 +76,7 @@
 
   <!-- Footer -->
   <footer>
-    &copy; <?= date('Y') ?> ITE-311 • Dark Theme Layout
+    &copy; <?= date('Y') ?> ITE-311 • All rights reserved.
   </footer>
 
   <!-- Bootstrap JS -->
