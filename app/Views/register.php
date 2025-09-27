@@ -14,7 +14,7 @@
         <!-- Card -->
         <div class="card border-0 shadow-lg rounded-4">
             <div class="card-body p-4">
-                <form action="<?= base_url('register') ?>" method="post">
+                <form action="<?= site_url('register') ?>" method="post">
                     <div class="mb-3">
                         <label for="name" class="form-label fw-semibold">Name</label>
                         <input type="text" 

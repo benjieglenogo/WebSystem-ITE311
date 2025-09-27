@@ -3,7 +3,7 @@
 <?= $this->section('content') ?>
 <div class="row justify-content-center mt-4">
     <div class="col-md-6 col-lg-5">
-        <h1 class="text-center mb-4 text-primary fw-bold">Login View Working<</h1>
+        <h1 class="text-center mb-4 text-primary fw-bold"></h1>
 
         <?php if (session()->getFlashdata('register_success')): ?>
             <div class="alert alert-success shadow-sm" role="alert">
@@ -20,7 +20,7 @@
         <!-- Card -->
         <div class="card border-0 shadow-lg rounded-4">
             <div class="card-body p-4">
-                <form action="<?= base_url('login') ?>" method="post">
+                <form action="<?= site_url('login') ?>" method="post">
                     <div class="mb-3">
                         <label for="email" class="form-label fw-semibold">username</label>
                         <input type="email" 

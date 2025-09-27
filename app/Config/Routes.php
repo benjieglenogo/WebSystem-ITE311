@@ -18,4 +18,4 @@ $routes->match(['get', 'post'], '/login', 'Auth::login');
 $routes->get('/logout', 'Auth::logout');
 $routes->get('/dashboard', 'Auth::dashboard');
 // Registration
-// $routes->get('/register', 'Auth::register');
+$routes->match(['get','post'], '/register', 'Auth::register');
