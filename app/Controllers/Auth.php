@@ -2,156 +2,141 @@
 
 namespace App\Controllers;
 
-use App\Models\UserModel;
-
 class Auth extends BaseController
 {
-    public function login()
+    
+     // Handles registration 
+    
+    public function register()
     {
-        helper(['form']); // make sure form helper is loaded
         $session = session();
-        $model = new UserModel();
-
-        if ($this->request->getMethod() === 'post') {
-            $email    = $this->request->getPost('email');
-            $password = $this->request->getPost('password');
-
-            // Find user by email
-            $user = $model->where('email', $email)->first();
-
-            $isValid = false;
-            if ($user) {
-                // First try bcrypt/argon hash verify
-                if (password_verify($password, $user['password'])) {
-                    $isValid = true;
-                } else {
-                    // Legacy plaintext migration: if matches exactly, rehash and save
-                    if ($user['password'] === $password) {
-                        $isValid = true;
-                        $model->update($user['id'], [
-                            'password' => password_hash($password, PASSWORD_DEFAULT),
-                        ]);
-                    }
-                }
-            }
-
-            if ($isValid) {
-                // Store session data
-                $session->set([
-                    'id'         => $user['id'],
-                    'email'      => $user['email'],
-                    'role'       => $user['role'],
-                    'isLoggedIn' => true,
-                ]);
-
-                // Unified redirect: everyone goes to the same dashboard URL
-                return redirect()->to(site_url('dashboard'));
-            } else {
-                $session->setFlashdata('login_error', 'Invalid login credentials');
-                return redirect()->back();
-            }
+        if ($session->get('isLoggedIn')) {
+            return redirect()->to(base_url('dashboard'));
         }
 
-        // Show login form
+        // Process form submission (POST)
+        if ($this->request->getMethod() === 'POST') {
+            $name = trim((string) $this->request->getPost('name'));
+            $email = trim((string) $this->request->getPost('email'));
+            $password = (string) $this->request->getPost('password');
+            $passwordConfirm = (string) $this->request->getPost('password_confirm');
+
+            if ($name === '' || $email === '' || $password === '' || $passwordConfirm === '') {
+                return redirect()->back()->withInput()->with('register_error', 'All fields are required.');
+            }
+
+            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return redirect()->back()->withInput()->with('register_error', 'Invalid email address.');
+            }
+
+            if ($password !== $passwordConfirm) {
+                return redirect()->back()->withInput()->with('register_error', 'Passwords do not match.');
+            }
+
+            $userModel = new \App\Models\UserModel();
+
+            if ($userModel->where('email', $email)->first()) {
+                return redirect()->back()->withInput()->with('register_error', 'Email is already registered.');
+            }
+
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
+            // Default new users to 'student' to match migration ENUM
+            $userId = $userModel->insert([
+                'name' => $name,
+                'email' => $email,
+                'role' => 'student',
+                'password' => $passwordHash,
+            ], true);
+
+            if (! $userId) {
+                return redirect()->back()->withInput()->with('register_error', 'Registration failed.');
+            }
+
+            return redirect()
+                ->to(base_url('login'))
+                ->with('register_success', 'Account created successfully. Please log in.');
+        }
+
+        // Display form (GET)
+        return view('register');
+    }
+
+    // Login 
+    public function login()
+    {
+        $session = session();
+        if ($session->get('isLoggedIn')) {
+            return redirect()->to(base_url('dashboard'));
+        }
+
+        // Process form submission (POST)
+        if ($this->request->getMethod() === 'POST') {
+            $email = trim((string) $this->request->getPost('email'));
+            $password = (string) $this->request->getPost('password');
+
+            $userModel = new \App\Models\UserModel();
+            $user = $userModel->where('email', $email)->first();
+            
+            if ($user && password_verify($password, $user['password'])) {
+                $session->set([
+                    'isLoggedIn' => true,
+                    'userId' => $user['id'] ?? null,
+                    'userName' => $user['name'] ?? null,
+                    'userEmail' => $user['email'] ?? $email,
+                    'userRole' => $user['role'] ?? 'student',
+                ]);
+                return redirect()->to(base_url('dashboard'));
+            }
+
+            return redirect()->back()->with('login_error', 'Invalid credentials');
+        }
+
         return view('login');
     }
 
-    public function register()
+ //Destroy user session
+    public function logout()
     {
-        helper(['form']);
         $session = session();
-        $model = new UserModel();
-
-        if ($this->request->getMethod() === 'post') {
-            $name = $this->request->getPost('name');
-            $email = $this->request->getPost('email');
-            $password = $this->request->getPost('password');
-            $passwordConfirm = $this->request->getPost('password_confirm');
-
-            if ($password !== $passwordConfirm) {
-                $session->setFlashdata('register_error', 'Passwords do not match.');
-                return redirect()->back()->withInput();
-            }
-
-            // Default role for newly registered users (adjust as needed)
-            $role = 'student';
-
-            // Check if email already exists
-            $existing = $model->where('email', $email)->first();
-            if ($existing) {
-                $session->setFlashdata('register_error', 'Email is already registered.');
-                return redirect()->back()->withInput();
-            }
-
-            $model->insert([
-                'name' => $name,
-                'email' => $email,
-                'password' => password_hash($password, PASSWORD_DEFAULT),
-                'role' => $role,
-            ]);
-
-            // Auto-login after successful registration
-            $newUserId = $model->getInsertID();
-            $session->set([
-                'id' => $newUserId,
-                'email' => $email,
-                'role' => $role,
-                'isLoggedIn' => true,
-            ]);
-
-            return redirect()->to(site_url('dashboard'));
-        }
-
-        return view('register');
+        $session->destroy();
+        return redirect()->to(base_url('login'));
     }
 
     public function dashboard()
     {
         $session = session();
-
-        // Authorization check: ensure user is logged in
-        if (!$session->get('isLoggedIn')) {
-            $session->setFlashdata('error', 'Please log in to access the dashboard.');
-            return redirect()->to(site_url('login'));
+        if (! $session->get('isLoggedIn')) {
+            return redirect()->to(base_url('login'));
         }
 
-        $role = $session->get('role');
+        $role = (string) $session->get('userRole');
+        $userName = (string) $session->get('userName');
+        $userEmail = (string) $session->get('userEmail');
 
-        // Example: fetch role-specific data (stubbed here; replace with real queries)
-        $dataForView = [];
+        // Fetch role-specific data
+        $data = [
+            'role' => $role,
+            'userName' => $userName,
+            'userEmail' => $userEmail,
+            'email' => $userEmail, // For backward compatibility with dashboard view
+            'widgets' => [],
+        ];
 
         if ($role === 'admin') {
-            // e.g., get counts of users, courses, reports, etc.
-            $dataForView['widgets'] = [
-                'users' => 120,
-                'reports' => 8,
-                'settings' => true,
-            ];
+            $userModel = new \App\Models\UserModel();
+            $data['widgets']['users'] = $userModel->countAllResults();
+            $data['widgets']['reports'] = 5; // Placeholder
         } elseif ($role === 'teacher') {
-            // e.g., get classes, assignments to grade, notifications
-            $dataForView['widgets'] = [
-                'classes' => 4,
-                'toGrade' => 27,
-                'announcements' => 3,
-            ];
-        } elseif ($role === 'student') {
-            // e.g., get enrolled courses, pending assignments, announcements
-            $dataForView['widgets'] = [
-                'courses' => 5,
-                'assignments' => 2,
-                'announcements' => 6,
-            ];
+            $data['widgets']['classes'] = 3; // Placeholder
+            $data['widgets']['toGrade'] = 12; // Placeholder
+            $data['widgets']['announcements'] = 2; // Placeholder
+        } else { // student
+            $data['widgets']['courses'] = 4; // Placeholder
+            $data['widgets']['assignments'] = 3; // Placeholder
+            $data['widgets']['announcements'] = 1; // Placeholder
         }
 
-        $dataForView['role'] = $role;
-        $dataForView['email'] = $session->get('email');
-
-        return view('dashboard', $dataForView);
-    }
-
-    public function logout()
-    {
-        session()->destroy();
-        return redirect()->to(site_url('login'));
+        return view('auth/dashboard', $data);
     }
 }

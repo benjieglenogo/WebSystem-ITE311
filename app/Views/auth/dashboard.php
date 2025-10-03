@@ -1,4 +1,4 @@
-<?= $this->extend('template') ?>
+<?= $this->extend('templates/header') ?>
 
 <?= $this->section('content') ?>
 	<div class="d-flex justify-content-between align-items-center mb-4">
@@ -7,10 +7,17 @@
 	</div>
 
 	<div class="alert alert-info shadow-sm rounded-3" role="alert">
-		Welcome, <strong><?= esc(isset($email) ? $email : session('email')) ?></strong>!
+		Welcome, <strong><?= esc(isset($userName) ? $userName : session('userName')) ?></strong>!
 	</div>
 
-	<?php $roleFromSession = session('role'); $roleLocal = isset($role) ? $role : $roleFromSession; ?>
+	<?php 
+		$roleFromSession = session('userRole'); 
+		$roleLocal = isset($role) ? $role : $roleFromSession; 
+		// Ensure we have a valid role
+		if (!$roleLocal || !in_array($roleLocal, ['admin', 'teacher', 'student'])) {
+			$roleLocal = 'student'; // Default fallback
+		}
+	?>
 
 	<?php if ($roleLocal === 'admin'): ?>
 		<div class="card border-0 shadow-lg rounded-4 mb-3">
