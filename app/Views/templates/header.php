@@ -126,7 +126,136 @@
     &copy; <?= date('Y') ?> ITE-311 • All rights reserved.
   </footer>
 
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Enrollment AJAX Script -->
+  <script>
+  $(document).ready(function() {
+      $('.enroll-btn').on('click', function(e) {
+          e.preventDefault();
+
+          var button = $(this);
+          var courseId = button.data('course-id');
+          var originalText = button.text();
+
+          // Prevent double-clicking
+          if (button.prop('disabled')) {
+              return;
+          }
+
+          // Show loading state
+          button.prop('disabled', true).text('Enrolling...');
+
+          // Send AJAX request
+          $.post('<?= base_url('course/enroll') ?>', {
+              course_id: courseId
+          })
+          .done(function(response) {
+              if (response.success) {
+                  // Show success message
+                  showAlert(response.message, 'success');
+
+                  // Move course to enrolled section dynamically
+                  moveCourseToEnrolled(button, courseId);
+
+                  // Update counters
+                  updateEnrollmentCounters();
+              } else {
+                  // Show error message
+                  showAlert(response.message, 'danger');
+
+                  // Reset button
+                  button.prop('disabled', false).text(originalText);
+              }
+          })
+          .fail(function() {
+              // Show error message
+              showAlert('An error occurred. Please try again.', 'danger');
+
+              // Reset button
+              button.prop('disabled', false).text(originalText);
+          });
+      });
+
+      // Function to move course from available to enrolled section
+      function moveCourseToEnrolled(button, courseId) {
+          // Find the course card
+          var courseCard = button.closest('.col-md-6');
+
+          // Get course information
+          var courseTitle = courseCard.find('.card-title').text();
+          var courseDescription = courseCard.find('.card-text').text();
+
+          // Create enrolled course HTML
+          var enrolledCourseHtml = `
+              <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                      <h6 class="mb-1 fw-semibold">${courseTitle}</h6>
+                      <p class="mb-1 text-muted">${courseDescription}</p>
+                      <small class="text-muted">Enrolled: ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</small>
+                  </div>
+                  <span class="badge bg-success rounded-pill">Enrolled</span>
+              </div>
+          `;
+
+          // Add to enrolled courses section (if not empty)
+          var enrolledSection = $('.list-group');
+          if (enrolledSection.length > 0) {
+              enrolledSection.append(enrolledCourseHtml);
+          } else {
+              // If no enrolled courses section exists, prepend it
+              var enrolledContainer = $('h5:contains("My Enrolled Courses")').parent();
+              enrolledContainer.append('<div class="list-group mt-3">' + enrolledCourseHtml + '</div>');
+          }
+
+          // Remove from available courses
+          courseCard.fadeOut(300, function() {
+              $(this).remove();
+
+              // Check if no courses left in available section
+              var availableSection = $('.row').hasClass('available-courses-container') ? $('.available-courses-container .row') : $('.row').not(':has(.list-group)');
+              if (availableSection.children('.col-md-6').length === 0) {
+                  availableSection.html('<div class="text-muted">No courses available for enrollment.</div>');
+              }
+          });
+
+          // Update button state
+          button.removeClass('btn-primary').addClass('btn-success')
+               .prop('disabled', true).text('Enrolled');
+      }
+
+      // Function to update enrollment counters
+      function updateEnrollmentCounters() {
+          // Count enrolled courses
+          var enrolledCount = $('.list-group .list-group-item').length;
+
+          // Update the counter in stats section
+          $('.col-md-4 h3').first().text(enrolledCount);
+
+          // Update available courses count if needed
+          var availableCount = $('.row .col-md-6').length;
+          // You can add logic here to update other counters if needed
+      }
+
+      // Function to show Bootstrap alerts
+      function showAlert(message, type) {
+          var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                          message +
+                          '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                          '</div>';
+
+          $('.container').prepend(alertHtml);
+
+          // Auto-dismiss after 5 seconds
+          setTimeout(function() {
+              $('.alert').fadeOut();
+          }, 5000);
+      }
+  });
+  </script>
 </body>
 </html>

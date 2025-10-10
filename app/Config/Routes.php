@@ -21,3 +21,6 @@ $routes->get('/dashboard', 'Auth::dashboard');
 // Registration
 $routes->get('/register', 'Auth::register');
 $routes->post('/register', 'Auth::register');
+
+// Course enrollment
+$routes->post('/course/enroll', 'Course::enroll');
