@@ -21,3 +21,15 @@ $routes->get('/dashboard', 'Auth::dashboard');
 // Registration
 $routes->get('/register', 'Auth::register');
 $routes->post('/register', 'Auth::register');
+
+// Announcements
+$routes->get('/announcements', 'Announcement::index');
+
+// Role-specific dashboards
+$routes->group('admin', ['filter' => 'roleAuth'], function ($routes) {
+    $routes->get('dashboard', 'Admin::dashboard');
+});
+
+$routes->group('teacher', ['filter' => 'roleAuth'], function ($routes) {
+    $routes->get('dashboard', 'Teacher::dashboard');
+});

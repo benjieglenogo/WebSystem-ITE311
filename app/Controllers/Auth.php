@@ -86,7 +86,18 @@ class Auth extends BaseController
                     'userEmail' => $user['email'] ?? $email,
                     'userRole' => $user['role'] ?? 'student',
                 ]);
-                return redirect()->to(base_url('dashboard'));
+
+                // Role-based redirection
+                $role = $user['role'] ?? 'student';
+                if ($role === 'student') {
+                    return redirect()->to(base_url('announcements'));
+                } elseif ($role === 'teacher') {
+                    return redirect()->to(base_url('teacher/dashboard'));
+                } elseif ($role === 'admin') {
+                    return redirect()->to(base_url('admin/dashboard'));
+                } else {
+                    return redirect()->to(base_url('dashboard'));
+                }
             }
 
             return redirect()->back()->with('login_error', 'Invalid credentials');
