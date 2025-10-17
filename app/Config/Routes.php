@@ -33,3 +33,44 @@ $routes->group('admin', ['filter' => 'roleAuth'], function ($routes) {
 $routes->group('teacher', ['filter' => 'roleAuth'], function ($routes) {
     $routes->get('dashboard', 'Teacher::dashboard');
 });
+
+// Course enrollment
+$routes->post('/course/enroll', 'Course::enroll');
+=======
+// Course enrollment
+$routes->post('/course/enroll', 'Course::enroll');
+>>>>>>> 35010129780f3685d0f327c9a20c364cf83dd5e6
+=======
+// Announcements
+$routes->get('/announcements', 'Announcement::index');
+
+// Role-specific dashboards
+$routes->group('admin', ['filter' => 'roleAuth'], function ($routes) {
+    $routes->get('dashboard', 'Admin::dashboard');
+});
+
+$routes->group('teacher', ['filter' => 'roleAuth'], function ($routes) {
+    $routes->get('dashboard', 'Teacher::dashboard');
+});
+
+// Course enrollment
+$routes->post('/course/enroll', 'Course::enroll');
+=======
+// Announcements
+$routes->get('/announcements', 'Announcement::index');
+
+// Role-specific dashboards
+$routes->group('admin', ['filter' => 'roleAuth'], function ($routes) {
+    $routes->get('dashboard', 'Admin::dashboard');
+});
+
+$routes->group('teacher', ['filter' => 'roleAuth'], function ($routes) {
+    $routes->get('dashboard', 'Teacher::dashboard');
+});
+
+// Course enrollment
+$routes->post('/course/enroll', 'Course::enroll');
+=======
+// Course enrollment
+$routes->post('/course/enroll', 'Course::enroll');
+>>>>>>> 35010129780f3685d0f327c9a20c364cf83dd5e6
