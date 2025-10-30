@@ -9,6 +9,10 @@ class Admin extends BaseController
 {
     public function dashboard()
     {
-        return view('admin_dashboard');
+        // Fetch courses for admin to manage materials
+        $courseModel = new \App\Models\CourseModel();
+        $data['courses'] = $courseModel->findAll();
+
+        return view('admin_dashboard', $data);
     }
 }
