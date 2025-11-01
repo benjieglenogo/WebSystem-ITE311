@@ -41,3 +41,7 @@ $routes->post('/course/enroll', 'Course::enroll');
 $routes->post('/materials/upload', 'Materials::upload');
 $routes->get('/materials/delete/(:num)', 'Materials::delete/$1');
 $routes->get('/materials/download/(:num)', 'Materials::download/$1');
+
+// Notifications
+$routes->get('/notifications', 'Notifications::get');
+$routes->post('/notifications/mark_read/(:num)', 'Notifications::mark_as_read/$1');

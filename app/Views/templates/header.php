@@ -96,6 +96,27 @@
               <li class="nav-item"><a class="nav-link" href="#">Assignments</a></li>
               <li class="nav-item"><a class="nav-link" href="#">Grades</a></li>
             <?php endif; ?>
+            
+            <!-- Notifications Dropdown -->
+            <?php if (session('isLoggedIn')): ?>
+            <li class="nav-item dropdown">
+              <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <span style="font-size: 1.2rem;">🔔</span>
+                <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle" id="notificationBadge" style="display: none;">0</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" id="notificationDropdownMenu" style="min-width: 300px; max-height: 400px; overflow-y: auto;">
+                <li><h6 class="dropdown-header">Notifications</h6></li>
+                <li><hr class="dropdown-divider"></li>
+                <li id="notificationList">
+                  <div class="px-3 py-2 text-muted text-center">Loading notifications...</div>
+                </li>
+                <li id="noNotifications" style="display: none;">
+                  <div class="px-3 py-2 text-muted text-center">No notifications</div>
+                </li>
+              </ul>
+            </li>
+            <?php endif; ?>
+            
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                 <?= esc(session('userName') ?? 'User') ?>
@@ -132,9 +153,134 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Enrollment AJAX Script -->
+  <!-- Notification and Enrollment AJAX Scripts -->
   <script>
   $(document).ready(function() {
+      // ==================== NOTIFICATION FUNCTIONS ====================
+      
+      // Function to fetch and update notifications
+      function fetchNotifications() {
+          $.get('<?= base_url('notifications') ?>')
+              .done(function(response) {
+                  if (response.success) {
+                      updateNotificationBadge(response.unread_count);
+                      updateNotificationList(response.notifications);
+                  }
+              })
+              .fail(function() {
+                  console.error('Failed to fetch notifications');
+              });
+      }
+
+      // Function to update notification badge
+      function updateNotificationBadge(count) {
+          var badge = $('#notificationBadge');
+          if (count > 0) {
+              badge.text(count).show();
+          } else {
+              badge.hide();
+          }
+      }
+
+      // Function to update notification list
+      function updateNotificationList(notifications) {
+          var list = $('#notificationList');
+          var noNotifications = $('#noNotifications');
+          
+          list.empty();
+          
+          if (notifications && notifications.length > 0) {
+              noNotifications.hide();
+              
+              $.each(notifications, function(index, notification) {
+                  var isRead = notification.is_read == 1;
+                  var alertClass = isRead ? 'alert-secondary' : 'alert-info';
+                  var readButton = isRead ? '' : '<button class="btn btn-sm btn-outline-primary mark-read-btn" data-id="' + notification.id + '">Mark as Read</button>';
+                  
+                  var notificationHtml = `
+                      <li class="px-3 py-2 border-bottom">
+                          <div class="alert ${alertClass} mb-0 py-2">
+                              <p class="mb-1 small">${escapeHtml(notification.message)}</p>
+                              <small class="text-muted d-block mb-1">${formatDate(notification.created_at)}</small>
+                              ${readButton ? '<div class="mt-2">' + readButton + '</div>' : ''}
+                          </div>
+                      </li>
+                  `;
+                  list.append(notificationHtml);
+              });
+          } else {
+              list.empty();
+              noNotifications.show();
+          }
+      }
+
+      // Function to mark notification as read
+      function markNotificationAsRead(notificationId) {
+          $.post('<?= base_url('notifications/mark_read/') ?>' + notificationId)
+              .done(function(response) {
+                  if (response.success) {
+                      // Remove the notification from list or update its state
+                      $('.mark-read-btn[data-id="' + notificationId + '"]').closest('li').find('.alert')
+                          .removeClass('alert-info')
+                          .addClass('alert-secondary')
+                          .find('.mark-read-btn')
+                          .remove();
+                      
+                      // Refresh notification count
+                      fetchNotifications();
+                  } else {
+                      alert('Failed to mark notification as read: ' + response.message);
+                  }
+              })
+              .fail(function() {
+                  alert('An error occurred while marking the notification as read.');
+              });
+      }
+
+      // Event handler for mark as read button
+      $(document).on('click', '.mark-read-btn', function() {
+          var notificationId = $(this).data('id');
+          markNotificationAsRead(notificationId);
+      });
+
+      // Fetch notifications on page load
+      <?php if (session('isLoggedIn')): ?>
+      fetchNotifications();
+      
+      // Optional: Fetch notifications every 60 seconds (real-time updates)
+      setInterval(function() {
+          fetchNotifications();
+      }, 60000);
+      <?php endif; ?>
+
+      // Helper function to escape HTML
+      function escapeHtml(text) {
+          var map = {
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#039;'
+          };
+          return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+      }
+
+      // Helper function to format date
+      function formatDate(dateString) {
+          var date = new Date(dateString);
+          var now = new Date();
+          var diff = Math.floor((now - date) / 1000); // difference in seconds
+          
+          if (diff < 60) return 'Just now';
+          if (diff < 3600) return Math.floor(diff / 60) + ' minutes ago';
+          if (diff < 86400) return Math.floor(diff / 3600) + ' hours ago';
+          if (diff < 604800) return Math.floor(diff / 86400) + ' days ago';
+          
+          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+
+      // ==================== ENROLLMENT FUNCTIONS ====================
+      
       $('.enroll-btn').on('click', function(e) {
           e.preventDefault();
 
@@ -164,6 +310,9 @@
 
                   // Update counters
                   updateEnrollmentCounters();
+                  
+                  // Refresh notifications after enrollment
+                  fetchNotifications();
               } else {
                   // Show error message
                   showAlert(response.message, 'danger');
