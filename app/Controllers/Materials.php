@@ -4,114 +4,185 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use App\Models\MaterialModel;
-use CodeIgniter\HTTP\ResponseInterface;
+use App\Models\CourseModel;
+use App\Models\EnrollmentModel;
 
 class Materials extends BaseController
 {
-    public function upload($course_id)
+    /**
+     * Upload material for a course
+     */
+    public function upload($courseId = null)
     {
-        // Check if user is logged in and is admin or teacher
-        if (!session()->get('isLoggedIn') || !in_array(session()->get('role'), ['admin', 'teacher'])) {
-            return redirect()->to('/login')->with('error', 'Access denied.');
+        $session = session();
+        
+        // Check if user is logged in
+        if (! $session->get('isLoggedIn')) {
+            return redirect()->to(base_url('login'));
         }
 
-        if ($this->request->getMethod() === 'POST') {
-            // Load CodeIgniter's File Uploading Library and Validation Library
-            $file = $this->request->getFile('material_file');
-            $validation = \Config\Services::validation();
+        // Check if user is admin or teacher
+        $userRole = $session->get('userRole');
+        if ($userRole !== 'admin' && $userRole !== 'teacher') {
+            return redirect()->to(base_url('dashboard'))->with('error', 'You do not have permission to upload materials.');
+        }
 
-            // Configure the upload preferences
-            $uploadPath = WRITEPATH . 'uploads/materials/';
+        // Get course_id from route or POST
+        if ($courseId) {
+            $course_id = $courseId;
+        } else {
+            $course_id = $this->request->getPost('course_id');
+        }
+
+        if (!$course_id) {
+            return redirect()->back()->with('error', 'Course ID is required.');
+        }
+
+        // Verify course exists
+        $courseModel = new CourseModel();
+        $course = $courseModel->find($course_id);
+        if (!$course) {
+            return redirect()->back()->with('error', 'Course not found.');
+        }
+
+        // Process file upload
+        if ($this->request->getMethod() === 'POST') {
+            $file = $this->request->getFile('material_file');
+            
+            if (!$file || !$file->isValid()) {
+                return redirect()->back()->with('error', 'No file was uploaded or file is invalid.');
+            }
+
+            // Validate file
+            if ($file->hasMoved()) {
+                return redirect()->back()->with('error', 'File has already been moved.');
+            }
+
+            // Create uploads directory if it doesn't exist
+            $uploadPath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'materials' . DIRECTORY_SEPARATOR;
             if (!is_dir($uploadPath)) {
                 mkdir($uploadPath, 0755, true);
             }
 
-            // Set validation rules
-            $validation->setRules([
-                'material_file' => [
-                    'label' => 'Material File',
-                    'rules' => 'uploaded[material_file]|max_size[material_file,10240]|ext_in[material_file,pdf,doc,docx,txt,jpg,jpeg,png,mp4,avi]',
-                ],
-            ]);
+            // Generate unique filename
+            $newName = $file->getRandomName();
+            $filePath = 'materials' . DIRECTORY_SEPARATOR . $newName;
 
-            if (!$validation->withRequest($this->request)->run()) {
-                return redirect()->back()->with('error', $validation->getError('material_file'));
-            }
-
-            // Perform the file upload
-            if ($file->isValid() && !$file->hasMoved()) {
-                $newName = $file->getRandomName();
-                $file->move($uploadPath, $newName);
-
-                // Prepare data and save to database
+            // Move file
+            if ($file->move(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'materials', $newName)) {
+                // Save to database
                 $materialModel = new MaterialModel();
                 $data = [
                     'course_id' => $course_id,
                     'file_name' => $file->getClientName(),
-                    'file_path' => 'writable/uploads/materials/' . $newName,
-                    'created_at' => date('Y-m-d H:i:s'),
+                    'file_path' => $filePath,
+                    'created_at' => date('Y-m-d H:i:s')
                 ];
 
-                if ($materialModel->insertMaterial($data)) {
-                    return redirect()->back()->with('success', 'Material uploaded successfully.');
+                if ($materialModel->insert($data)) {
+                    return redirect()->to(base_url('dashboard'))->with('success', 'Material uploaded successfully!');
                 } else {
-                    return redirect()->back()->with('error', 'Failed to save material.');
+                    // Delete uploaded file if database insert failed
+                    unlink(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $filePath);
+                    return redirect()->back()->with('error', 'Failed to save material to database.');
                 }
             } else {
-                return redirect()->back()->with('error', 'File upload failed.');
+                return redirect()->back()->with('error', 'Failed to upload file: ' . implode(', ', $file->getErrors()));
             }
         }
 
-        // Display upload form
-        return view('materials/upload', ['course_id' => $course_id]);
+        // GET request - show upload form (this would be handled in dashboard view now)
+        return redirect()->to(base_url('dashboard'));
     }
 
-    public function delete($material_id)
+    /**
+     * Download material
+     */
+    public function download($materialId = null)
     {
-        // Check if user is logged in and is admin or teacher
-        if (!session()->get('isLoggedIn') || !in_array(session()->get('role'), ['admin', 'teacher'])) {
-            return redirect()->to('/login')->with('error', 'Access denied.');
-        }
-
-        $materialModel = new MaterialModel();
-        $material = $materialModel->find($material_id);
-
-        if ($material) {
-            // Delete file
-            if (file_exists($material['file_path'])) {
-                unlink($material['file_path']);
-            }
-
-            // Delete record
-            if ($materialModel->delete($material_id)) {
-                return redirect()->back()->with('success', 'Material deleted successfully.');
-            }
-        }
-
-        return redirect()->back()->with('error', 'Material not found.');
-    }
-
-    public function download($material_id)
-    {
+        $session = session();
+        
         // Check if user is logged in
-        if (!session()->get('isLoggedIn')) {
-            return redirect()->to('/login')->with('error', 'Please log in to download materials.');
+        if (! $session->get('isLoggedIn')) {
+            return redirect()->to(base_url('login'));
+        }
+
+        if (!$materialId) {
+            return redirect()->back()->with('error', 'Material ID is required.');
         }
 
         $materialModel = new MaterialModel();
-        $material = $materialModel->find($material_id);
+        $material = $materialModel->find($materialId);
 
         if (!$material) {
             return redirect()->back()->with('error', 'Material not found.');
         }
 
-        // Check if user is enrolled in the course
-        $enrollmentModel = new \App\Models\EnrollmentModel();
-        if (!$enrollmentModel->isAlreadyEnrolled(session()->get('userId'), $material['course_id'])) {
-            return redirect()->back()->with('error', 'You are not enrolled in this course.');
+        // Check if user has access (student must be enrolled in the course)
+        $userRole = $session->get('userRole');
+        $userId = $session->get('userId');
+
+        if ($userRole === 'student') {
+            // Check if student is enrolled in the course
+            $enrollmentModel = new EnrollmentModel();
+            if (! $enrollmentModel->isAlreadyEnrolled($userId, $material['course_id'])) {
+                return redirect()->back()->with('error', 'You must be enrolled in this course to download materials.');
+            }
+        } elseif ($userRole !== 'admin' && $userRole !== 'teacher') {
+            return redirect()->back()->with('error', 'Access denied.');
         }
 
-        // Force download
-        return $this->response->download($material['file_path'], null, true);
+        // Get file path
+        $filePath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $material['file_path'];
+
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'File not found on server.');
+        }
+
+        // Download file
+        return $this->response->download($filePath, null)->setFileName($material['file_name']);
+    }
+
+    /**
+     * Delete material
+     */
+    public function delete($materialId = null)
+    {
+        $session = session();
+        
+        // Check if user is logged in
+        if (! $session->get('isLoggedIn')) {
+            return redirect()->to(base_url('login'));
+        }
+
+        // Check if user is admin or teacher
+        $userRole = $session->get('userRole');
+        if ($userRole !== 'admin' && $userRole !== 'teacher') {
+            return redirect()->back()->with('error', 'You do not have permission to delete materials.');
+        }
+
+        if (!$materialId) {
+            return redirect()->back()->with('error', 'Material ID is required.');
+        }
+
+        $materialModel = new MaterialModel();
+        $material = $materialModel->find($materialId);
+
+        if (!$material) {
+            return redirect()->back()->with('error', 'Material not found.');
+        }
+
+        // Delete file from server
+        $filePath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $material['file_path'];
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        // Delete from database
+        if ($materialModel->delete($materialId)) {
+            return redirect()->to(base_url('dashboard'))->with('success', 'Material deleted successfully!');
+        } else {
+            return redirect()->back()->with('error', 'Failed to delete material.');
+        }
     }
 }

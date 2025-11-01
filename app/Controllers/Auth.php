@@ -87,17 +87,9 @@ class Auth extends BaseController
                     'userRole' => $user['role'] ?? 'student',
                 ]);
 
-                // Role-based redirection
+                // Role-based redirection - all roles go to unified dashboard
                 $role = $user['role'] ?? 'student';
-                if ($role === 'student') {
-                    return redirect()->to(base_url('announcements'));
-                } elseif ($role === 'teacher') {
-                    return redirect()->to(base_url('teacher/dashboard'));
-                } elseif ($role === 'admin') {
-                    return redirect()->to(base_url('admin/dashboard'));
-                } else {
-                    return redirect()->to(base_url('dashboard'));
-                }
+                return redirect()->to(base_url('dashboard'));
             }
 
             return redirect()->back()->with('login_error', 'Invalid credentials');
@@ -134,16 +126,100 @@ class Auth extends BaseController
             'widgets' => [],
         ];
 
+        $materialModel = new \App\Models\MaterialModel();
+        
         if ($role === 'admin') {
             $userModel = new \App\Models\UserModel();
+            $courseModel = new \App\Models\CourseModel();
+            $enrollmentModel = new \App\Models\EnrollmentModel();
+            
+            // Admin-specific statistics
             $data['widgets']['users'] = $userModel->countAllResults();
-            $data['widgets']['reports'] = 5; // Placeholder
+            $data['widgets']['courses'] = $courseModel->countAllResults();
+            $data['widgets']['enrollments'] = $enrollmentModel->countAllResults();
+            
+            // Get user counts by role
+            $data['widgets']['students'] = $userModel->where('role', 'student')->countAllResults();
+            $data['widgets']['teachers'] = $userModel->where('role', 'teacher')->countAllResults();
+            $data['widgets']['admins'] = $userModel->where('role', 'admin')->countAllResults();
+            
+            // Get all users for management
+            $data['allUsers'] = $userModel->findAll();
+            $data['allCourses'] = $courseModel->findAll();
+            
+            // Get all materials for admin
+            $data['allMaterials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
+                ->join('courses', 'courses.id = materials.course_id')
+                ->findAll();
         } elseif ($role === 'teacher') {
-            $data['widgets']['classes'] = 3; // Placeholder
+            $courseModel = new \App\Models\CourseModel();
+            $userId = $session->get('userId');
+            
+            // Get teacher's courses
+            $db = \Config\Database::connect();
+            $fields = $db->getFieldNames('courses');
+            if (in_array('teacher_id', $fields)) {
+                $data['teacherCourses'] = $courseModel->where('teacher_id', $userId)->findAll();
+            } else {
+                $data['teacherCourses'] = $courseModel->findAll();
+            }
+            
+            // Get materials for teacher's courses
+            $courseIds = array_column($data['teacherCourses'], 'id');
+            if (!empty($courseIds)) {
+                $data['materials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
+                    ->join('courses', 'courses.id = materials.course_id')
+                    ->whereIn('materials.course_id', $courseIds)
+                    ->findAll();
+            } else {
+                $data['materials'] = [];
+            }
+            
+            $data['widgets']['classes'] = count($data['teacherCourses']);
             $data['widgets']['toGrade'] = 12; // Placeholder
             $data['widgets']['announcements'] = 2; // Placeholder
         } else { // student
-            $data['widgets']['courses'] = 4; // Placeholder
+            $enrollmentModel = new \App\Models\EnrollmentModel();
+            $userId = $session->get('userId');
+            
+            // Initialize variables
+            $enrolledCourses = [];
+            $data['materials'] = [];
+            
+            if ($userId) {
+                try {
+                    // Get enrolled courses
+                    $enrolledCourses = $enrollmentModel->getUserEnrollments($userId);
+                    if (!is_array($enrolledCourses)) {
+                        $enrolledCourses = [];
+                    }
+                    
+                    // Get materials for enrolled courses
+                    $courseIds = array_column($enrolledCourses, 'course_id');
+                    if (!empty($courseIds) && is_array($courseIds)) {
+                        try {
+                            $data['materials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
+                                ->join('courses', 'courses.id = materials.course_id')
+                                ->whereIn('materials.course_id', $courseIds)
+                                ->orderBy('materials.created_at', 'DESC')
+                                ->findAll();
+                            if (!is_array($data['materials'])) {
+                                $data['materials'] = [];
+                            }
+                        } catch (\Exception $e) {
+                            $data['materials'] = [];
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $enrolledCourses = [];
+                    $data['materials'] = [];
+                }
+            }
+            
+            // Set enrolled courses in data
+            $data['enrolledCourses'] = $enrolledCourses;
+            
+            $data['widgets']['courses'] = count($enrolledCourses);
             $data['widgets']['assignments'] = 3; // Placeholder
             $data['widgets']['announcements'] = 1; // Placeholder
         }

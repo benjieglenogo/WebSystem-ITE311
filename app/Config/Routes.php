@@ -25,20 +25,19 @@ $routes->post('/register', 'Auth::register');
 // Announcements
 $routes->get('/announcements', 'Announcement::index');
 
-// Role-specific dashboards
-$routes->group('admin', ['filter' => 'roleAuth'], function ($routes) {
-    $routes->get('dashboard', 'Admin::dashboard');
-});
+// Role-specific dashboards - commented out until controllers are created
+// $routes->group('admin', ['filter' => 'roleAuth'], function ($routes) {
+//     $routes->get('dashboard', 'Admin::dashboard');
+// });
 
-$routes->group('teacher', ['filter' => 'roleAuth'], function ($routes) {
-    $routes->get('dashboard', 'Teacher::dashboard');
-});
+// $routes->group('teacher', ['filter' => 'roleAuth'], function ($routes) {
+//     $routes->get('dashboard', 'Teacher::dashboard');
+// });
 
 // Course enrollment
 $routes->post('/course/enroll', 'Course::enroll');
 
 // Materials
-$routes->get('/admin/course/(:num)/upload', 'Materials::upload/$1');
-$routes->post('/admin/course/(:num)/upload', 'Materials::upload/$1');
+$routes->post('/materials/upload', 'Materials::upload');
 $routes->get('/materials/delete/(:num)', 'Materials::delete/$1');
 $routes->get('/materials/download/(:num)', 'Materials::download/$1');
