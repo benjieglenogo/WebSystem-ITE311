@@ -36,6 +36,12 @@ $routes->get('/announcements', 'Announcement::index');
 
 // Course enrollment
 $routes->post('/course/enroll', 'Course::enroll');
+// Course search (GET/POST) - AJAX or regular
+$routes->get('/courses/search', 'Course::search');
+$routes->post('/courses/search', 'Course::search');
+
+// Optional: a courses page that uses the same search view
+$routes->get('/courses', 'Course::search');
 
 // Materials
 $routes->post('/materials/upload', 'Materials::upload');

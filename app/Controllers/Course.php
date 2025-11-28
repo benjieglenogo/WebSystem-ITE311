@@ -80,4 +80,34 @@ class Course extends BaseController
             ]);
         }
     }
+
+    /**
+     * Server-side search endpoint for AJAX requests.
+     * Accepts GET param `search_term` and returns JSON list of matching courses.
+     */
+    public function search()
+    {
+        $courseModel = new CourseModel();
+        $searchTerm = $this->request->getGet('search_term');
+
+        if (!empty($searchTerm)) {
+            $courseModel->like('course_name', $searchTerm);
+            $courseModel->orLike('description', $searchTerm);
+        }
+
+        $courses = $courseModel->findAll();
+
+        return $this->response->setJSON($courses);
+    }
+
+    /**
+     * Display the courses index page with search functionality.
+     */
+    public function index()
+    {
+        $courseModel = new CourseModel();
+        $courses = $courseModel->findAll();
+
+        return view('courses/index', ['courses' => $courses]);
+    }
 }
