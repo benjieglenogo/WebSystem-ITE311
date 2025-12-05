@@ -40,8 +40,8 @@ $routes->post('/course/enroll', 'Course::enroll');
 $routes->get('/courses/search', 'Course::search');
 $routes->post('/courses/search', 'Course::search');
 
-// Optional: a courses page that uses the same search view
-$routes->get('/courses', 'Course::search');
+// Courses page should render the index view (not the search JSON)
+$routes->get('/courses', 'Course::index');
 
 // Materials
 $routes->post('/materials/upload', 'Materials::upload');

@@ -2,57 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title><?= $this->renderSection('title') ?> - MyCI</title>
+  <title><?= $this->renderSection('title') ?> - My Learning System</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    /* Dark background with gradient */
+    /* Simple and clean background */
     body {
-      background: linear-gradient(135deg, #1e1e2f, #2d2d44);
+      background-color: #f8f9fa;
       min-height: 100vh;
       font-family: 'Segoe UI', sans-serif;
-      color: #e4e4e4;
+      color: #212529;
     }
 
     /* Navbar */
     .navbar {
-      background: #232339;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      background-color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .navbar-brand {
       font-size: 1.6rem;
       font-weight: bold;
-      color: #00d4ff;
+      color: #007bff;
     }
 
     .navbar .nav-link {
-      color: #ccc;
+      color: #6c757d;
       transition: color 0.3s ease;
     }
 
     .navbar .nav-link:hover {
-      color: #00d4ff;
+      color: #007bff;
     }
 
-    /* Page container (flat cards) */
+    /* Page container */
     .container {
       margin-top: 70px;
-      background: #2b2b40;
-      padding: 30px 28px;
-      border-radius: 12px;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.6);
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     /* Buttons */
     .btn-primary {
-      background: linear-gradient(135deg, #00d4ff, #007bff);
+      background-color: #007bff;
       border: none;
       font-weight: 500;
     }
 
     .btn-primary:hover {
-      background: linear-gradient(135deg, #007bff, #0056d2);
+      background-color: #0056b3;
     }
 
     /* Footer */
@@ -60,7 +60,7 @@
       text-align: center;
       padding: 20px 0;
       margin-top: 50px;
-      color: #aaa;
+      color: #6c757d;
       font-size: 0.85rem;
     }
   </style>
@@ -83,18 +83,18 @@
 
           <?php if (session('isLoggedIn')): ?>
             <li class="nav-item"><a class="nav-link" href="<?= site_url('dashboard') ?>">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?= site_url('courses') ?>">Courses</a></li>
             <?php if (session('userRole') === 'admin'): ?>
-              <li class="nav-item"><a class="nav-link" href="#">Admin Panel</a></li>
-              <li class="nav-item"><a class="nav-link" href="#">User Management</a></li>
-              <li class="nav-item"><a class="nav-link" href="#">System Reports</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('admin') ?>">Admin Panel</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('admin/users') ?>">User Management</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('announcements') ?>">Announcements</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('admin/reports') ?>">System Reports</a></li>
             <?php elseif (session('userRole') === 'teacher'): ?>
-              <li class="nav-item"><a class="nav-link" href="#">My Classes</a></li>
-              <li class="nav-item"><a class="nav-link" href="#">Gradebook</a></li>
-              <li class="nav-item"><a class="nav-link" href="#">Assignments</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('gradebook') ?>">Gradebook</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('assignments') ?>">Assignments</a></li>
             <?php elseif (session('userRole') === 'student'): ?>
-              <li class="nav-item"><a class="nav-link" href="#">My Courses</a></li>
-              <li class="nav-item"><a class="nav-link" href="#">Assignments</a></li>
-              <li class="nav-item"><a class="nav-link" href="#">Grades</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('assignments') ?>">Assignments</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('grades') ?>">Grades</a></li>
             <?php endif; ?>
             
             <!-- Notifications Dropdown -->

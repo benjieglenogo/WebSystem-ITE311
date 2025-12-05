@@ -2,6 +2,97 @@
 
 <?= $this->section('content') ?>
 	<!-- Course Search Bar (added for dashboard) -->
+
+	<!-- Modern dashboard styles -->
+	<style>
+		body {
+			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+			min-height: 100vh;
+			font-family: 'Segoe UI', sans-serif;
+		}
+
+		.dashboard-header {
+			display:flex;
+			justify-content:space-between;
+			align-items:center;
+			gap:12px;
+			margin-bottom:18px;
+		}
+
+		.stat-card {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(10px);
+			border: none;
+			border-radius: 15px;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+			transition: transform 0.3s ease, box-shadow 0.3s ease;
+		}
+
+		.stat-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+		}
+
+		.card {
+			background: rgba(255, 255, 255, 0.95);
+			backdrop-filter: blur(10px);
+			border: none;
+			border-radius: 15px;
+			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+		}
+
+		.course-card .card-body { min-height:120px; }
+		mark { background:#fffb91; padding:0 2px; }
+
+		/* Icon styling */
+		.stat-icon {
+			font-size: 2rem;
+			margin-bottom: 10px;
+			opacity: 0.8;
+		}
+
+		/* Welcome alert styling */
+		.alert-info {
+			background: rgba(255, 255, 255, 0.9);
+			border: none;
+			border-radius: 15px;
+			color: #495057;
+		}
+
+		/* Button enhancements */
+		.btn {
+			border-radius: 25px;
+			font-weight: 500;
+			transition: all 0.3s ease;
+		}
+
+		.btn:hover {
+			transform: translateY(-2px);
+		}
+
+		/* Search bar styling */
+		.input-group .form-control {
+			border-radius: 25px 0 0 25px;
+			border: 2px solid rgba(255, 255, 255, 0.2);
+			background: rgba(255, 255, 255, 0.9);
+		}
+
+		.input-group .btn {
+			border-radius: 0 25px 25px 0;
+			border: 2px solid rgba(255, 255, 255, 0.2);
+		}
+
+		/* Table styling */
+		.table {
+			background: rgba(255, 255, 255, 0.9);
+			border-radius: 10px;
+		}
+
+		@media (max-width:767px){
+			.dashboard-header{flex-direction:column;align-items:flex-start}
+			body { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); }
+		}
+	</style>
 	<div class="row mb-4">
 		<div class="col-md-6">
 			<form id="searchForm" class="d-flex">
@@ -52,86 +143,41 @@
 		<!-- Admin Statistics Cards -->
 		<div class="row mb-4">
 			<div class="col-md-3 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<div class="d-flex justify-content-between align-items-center">
-							<div>
-								<h6 class="text-muted mb-2">Total Users</h6>
-								<h2 class="mb-0 text-primary"><?= isset($widgets['users']) ? (int)$widgets['users'] : 0 ?></h2>
-							</div>
-							<div class="text-primary" style="font-size: 2.5rem;">
-								👥
-							</div>
-
-		<!-- Debug Panel (visible on page for troubleshooting) -->
-		<div id="search-debug-panel" style="position:fixed;right:12px;bottom:12px;width:320px;background:#111827;color:#e6edf3;border-radius:8px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,0.5);z-index:1200;font-size:13px;display:none;">
-			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-				<strong>Search Debug</strong>
-				<button id="search-debug-close" class="btn btn-sm btn-outline-light">Hide</button>
-			</div>
-			<div style="line-height:1.3">
-				<div><strong>Admin query:</strong> <span id="dbg-admin-q">(none)</span></div>
-				<div><strong>Admin visible:</strong> <span id="dbg-admin-count">0</span></div>
-				<hr style="border-color:rgba(255,255,255,0.06);margin:6px 0">
-				<div><strong>Student query:</strong> <span id="dbg-student-q">(none)</span></div>
-				<div><strong>Student visible:</strong> <span id="dbg-student-count">0</span></div>
-				<hr style="border-color:rgba(255,255,255,0.06);margin:6px 0">
-				<div id="dbg-last-log" style="font-size:12px;color:#cbd5e1;">Awaiting actions...</div>
-			</div>
-			<div style="margin-top:8px;text-align:right;">
-				<button id="search-debug-toggle" class="btn btn-sm btn-light">Refresh</button>
-			</div>
-		</div>
-
-						</div>
+				<div class="card stat-card h-100">
+					<div class="card-body p-4 text-center">
+						<i class="bi bi-people-fill stat-icon text-primary"></i>
+						<h6 class="text-muted mb-2">Total Users</h6>
+						<h2 class="mb-0 text-primary"><?= isset($widgets['users']) ? (int)$widgets['users'] : 0 ?></h2>
 					</div>
 				</div>
 			</div>
 
 			<div class="col-md-3 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<div class="d-flex justify-content-between align-items-center">
-							<div>
-								<h6 class="text-muted mb-2">Total Courses</h6>
-								<h2 class="mb-0 text-info"><?= isset($widgets['courses']) ? (int)$widgets['courses'] : 0 ?></h2>
-							</div>
-							<div class="text-info" style="font-size: 2.5rem;">
-								📚
-							</div>
-						</div>
+				<div class="card stat-card h-100">
+					<div class="card-body p-4 text-center">
+						<i class="bi bi-book-fill stat-icon text-info"></i>
+						<h6 class="text-muted mb-2">Total Courses</h6>
+						<h2 class="mb-0 text-info"><?= isset($widgets['courses']) ? (int)$widgets['courses'] : 0 ?></h2>
 					</div>
 				</div>
 			</div>
 
 			<div class="col-md-3 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<div class="d-flex justify-content-between align-items-center">
-							<div>
-								<h6 class="text-muted mb-2">Enrollments</h6>
-								<h2 class="mb-0 text-success"><?= isset($widgets['enrollments']) ? (int)$widgets['enrollments'] : 0 ?></h2>
-							</div>
-							<div class="text-success" style="font-size: 2.5rem;">
-								📝
-							</div>
-						</div>
+				<div class="card stat-card h-100">
+					<div class="card-body p-4 text-center">
+						<i class="bi bi-check-circle-fill stat-icon text-success"></i>
+						<h6 class="text-muted mb-2">Enrollments</h6>
+						<h2 class="mb-0 text-success"><?= isset($widgets['enrollments']) ? (int)$widgets['enrollments'] : 0 ?></h2>
 					</div>
 				</div>
 			</div>
 
 			<div class="col-md-3 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<div class="d-flex justify-content-between align-items-center">
-							<div>
-								<h6 class="text-muted mb-2">System Status</h6>
-								<h6 class="mb-0 text-success">Active</h6>
-							</div>
-							<div class="text-success" style="font-size: 2.5rem;">
-								✅
-							</div>
-						</div>
+				<div class="card stat-card h-100">
+					<div class="card-body p-4 text-center">
+						<i class="bi bi-activity stat-icon text-success"></i>
+						<h6 class="text-muted mb-2">System Status</h6>
+						<h6 class="mb-0 text-success">Active</h6>
 					</div>
 				</div>
 			</div>
@@ -218,65 +264,7 @@
 			</div>
 		</div>
 
-		<!-- Course Management -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<div class="d-flex justify-content-between align-items-center mb-3">
-					<h5 class="fw-semibold mb-0">Course Management</h5>
-					<button class="btn btn-primary btn-sm">Create New Course</button>
-				</div>
 
-				<!-- Admin Search (Client + Server) -->
-				<div class="row mb-3">
-					<div class="col-md-6 mb-2">
-						<input type="text" id="admin-client-search" class="form-control" placeholder="Filter displayed courses (client-side)...">
-					</div>
-					<div class="col-md-6 mb-2 d-flex">
-						<input type="text" id="admin-server-search" class="form-control me-2" placeholder="Search courses on server (press Enter or click)">
-						<button id="admin-server-search-btn" class="btn btn-outline-info me-2">Search</button>
-						<button id="admin-server-clear-btn" class="btn btn-outline-secondary">Clear</button>
-					</div>
-				</div>
-
-				<div id="admin-server-results" class="row mb-3" style="display:none;"></div>
-				
-				<?php if (isset($allCourses) && !empty($allCourses)): ?>
-					<div class="row admin-courses-container">
-						<?php foreach (array_slice($allCourses, 0, 6) as $course): ?>
-							<div class="col-md-6 mb-3" data-course-id="<?= esc($course['id'] ?? '') ?>">
-								<div class="card border-0 shadow-sm h-100">
-									<div class="card-body">
-										<h6 class="card-title fw-semibold mb-2">
-											<?= esc($course['course_name'] ?? 'Unnamed Course') ?>
-										</h6>
-										<?php if (isset($course['course_code'])): ?>
-											<small class="text-muted d-block mb-2">
-												Code: <?= esc($course['course_code']) ?>
-											</small>
-										<?php endif; ?>
-										<p class="card-text text-muted small mb-3">
-											<?= esc($course['description'] ?? 'No description available') ?>
-										</p>
-										<div class="d-flex gap-2">
-											<button class="btn btn-sm btn-outline-primary">Edit</button>
-											<button class="btn btn-sm btn-outline-info">Manage</button>
-											<button class="btn btn-sm btn-outline-danger">Delete</button>
-										</div>
-									</div>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-					<?php if (count($allCourses) > 6): ?>
-						<div class="text-center mt-3">
-							<a href="#" class="btn btn-outline-secondary">View All Courses</a>
-						</div>
-					<?php endif; ?>
-				<?php else: ?>
-					<div class="text-muted">No courses found.</div>
-				<?php endif; ?>
-			</div>
-		</div>
 
 		<!-- Upload Material Section for Admin -->
 		<div class="card border-0 shadow-lg rounded-4 mb-4">
