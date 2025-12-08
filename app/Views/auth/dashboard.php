@@ -217,50 +217,151 @@
 		<div class="card border-0 shadow-lg rounded-4 mb-4">
 			<div class="card-body p-4">
 				<div class="d-flex justify-content-between align-items-center mb-3">
-					<h5 class="fw-semibold mb-0">User Management</h5>
-					<button class="btn btn-primary btn-sm">Add New User</button>
+					<h5 class="fw-semibold mb-0">Manage Users</h5>
+					<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
+						<i class="bi bi-person-plus"></i> Add New User
+					</button>
 				</div>
 				
 				<?php if (isset($allUsers) && !empty($allUsers)): ?>
 					<div class="table-responsive">
-						<table class="table table-hover">
+						<table class="table table-hover" id="usersTable">
 							<thead>
 								<tr>
 									<th>ID</th>
 									<th>Name</th>
 									<th>Email</th>
 									<th>Role</th>
+									<th>Status</th>
 									<th>Actions</th>
 								</tr>
 							</thead>
 							<tbody>
-								<?php foreach (array_slice($allUsers, 0, 10) as $user): ?>
-									<tr>
+								<?php foreach ($allUsers as $user): ?>
+									<?php 
+										$isProtected = isset($user['is_protected']) && $user['is_protected'] == 1;
+										$status = isset($user['status']) ? $user['status'] : 'active';
+									?>
+									<tr data-user-id="<?= esc($user['id']) ?>" data-protected="<?= $isProtected ? '1' : '0' ?>">
 										<td><?= esc($user['id'] ?? '') ?></td>
-										<td><?= esc($user['name'] ?? '') ?></td>
+										<td>
+											<?= esc($user['name'] ?? '') ?>
+											<?php if ($isProtected): ?>
+												<span class="badge bg-warning text-dark ms-1" title="Protected Admin Account">🔒</span>
+											<?php endif; ?>
+										</td>
 										<td><?= esc($user['email'] ?? '') ?></td>
 										<td>
-											<span class="badge bg-<?= ($user['role'] ?? '') === 'admin' ? 'warning' : (($user['role'] ?? '') === 'teacher' ? 'info' : 'primary') ?>">
-												<?= esc($user['role'] ?? 'student') ?>
+											<?php if ($isProtected): ?>
+												<span class="badge bg-warning text-dark"><?= esc($user['role'] ?? 'admin') ?></span>
+											<?php else: ?>
+												<select class="form-select form-select-sm role-select" data-user-id="<?= esc($user['id']) ?>" style="width: auto; display: inline-block;">
+													<option value="student" <?= ($user['role'] ?? '') === 'student' ? 'selected' : '' ?>>Student</option>
+													<option value="teacher" <?= ($user['role'] ?? '') === 'teacher' ? 'selected' : '' ?>>Teacher</option>
+													<option value="admin" <?= ($user['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
+												</select>
+											<?php endif; ?>
+										</td>
+										<td>
+											<span class="badge bg-<?= $status === 'active' ? 'success' : 'secondary' ?>">
+												<?= ucfirst($status) ?>
 											</span>
 										</td>
 										<td>
-											<button class="btn btn-sm btn-outline-primary">Edit</button>
-											<button class="btn btn-sm btn-outline-danger">Delete</button>
+											<?php if ($isProtected): ?>
+												<button class="btn btn-sm btn-outline-info change-password-btn" data-user-id="<?= esc($user['id']) ?>" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+													Change Password
+												</button>
+											<?php else: ?>
+												<button class="btn btn-sm btn-outline-<?= $status === 'active' ? 'warning' : 'success' ?> toggle-status-btn" data-user-id="<?= esc($user['id']) ?>" data-status="<?= $status ?>">
+													<?= $status === 'active' ? 'Deactivate' : 'Activate' ?>
+												</button>
+												<button class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="<?= esc($user['id']) ?>">
+													Delete
+												</button>
+											<?php endif; ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
 							</tbody>
 						</table>
 					</div>
-					<?php if (count($allUsers) > 10): ?>
-						<div class="text-center mt-3">
-							<a href="#" class="btn btn-outline-secondary">View All Users</a>
-						</div>
-					<?php endif; ?>
 				<?php else: ?>
 					<div class="text-muted">No users found.</div>
 				<?php endif; ?>
+			</div>
+		</div>
+
+		<!-- Add User Modal -->
+		<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<form id="addUserForm">
+						<div class="modal-body">
+							<div class="mb-3">
+								<label for="userName" class="form-label">Full Name</label>
+								<input type="text" class="form-control" id="userName" name="name" required>
+								<div class="invalid-feedback"></div>
+							</div>
+							<div class="mb-3">
+								<label for="userEmail" class="form-label">Email/Username</label>
+								<input type="email" class="form-control" id="userEmail" name="email" required>
+								<div class="invalid-feedback"></div>
+							</div>
+							<div class="mb-3">
+								<label for="userPassword" class="form-label">Password</label>
+								<input type="password" class="form-control" id="userPassword" name="password" required>
+								<small class="form-text text-muted">Must contain uppercase, lowercase, number, and special character (min 8 characters)</small>
+								<div class="invalid-feedback"></div>
+							</div>
+							<div class="mb-3">
+								<label for="userRole" class="form-label">Role</label>
+								<select class="form-select" id="userRole" name="role" required>
+									<option value="">Select Role</option>
+									<option value="student">Student</option>
+									<option value="teacher">Teacher</option>
+									<option value="admin">Admin</option>
+								</select>
+								<div class="invalid-feedback"></div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Create User</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<!-- Change Password Modal -->
+		<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<form id="changePasswordForm">
+						<input type="hidden" id="passwordUserId" name="user_id">
+						<div class="modal-body">
+							<div class="mb-3">
+								<label for="newPassword" class="form-label">New Password</label>
+								<input type="password" class="form-control" id="newPassword" name="password" required>
+								<small class="form-text text-muted">Must contain uppercase, lowercase, number, and special character (min 8 characters)</small>
+								<div class="invalid-feedback"></div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Update Password</button>
+						</div>
+					</form>
+				</div>
 			</div>
 		</div>
 
@@ -992,5 +1093,270 @@ $(function(){
         $('#search-debug-panel').show();
         updateDebugPanel();
     }
+
+    // ==================== USER MANAGEMENT FUNCTIONS ====================
+    
+    // Helper function to show alerts
+    function showUserAlert(message, type) {
+        var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                        message +
+                        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                        '</div>';
+        $('.container').prepend(alertHtml);
+        setTimeout(function() {
+            $('.alert').first().fadeOut(function() { $(this).remove(); });
+        }, 5000);
+    }
+
+    // Add User Form Submission
+    $('#addUserForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        var originalText = submitBtn.text();
+        
+        submitBtn.prop('disabled', true).text('Creating...');
+        
+        // Clear previous validation errors
+        form.find('.is-invalid').removeClass('is-invalid');
+        form.find('.invalid-feedback').text('');
+        
+        $.ajax({
+            url: '<?= base_url('users/create') ?>',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showUserAlert(response.message, 'success');
+                    $('#addUserModal').modal('hide');
+                    form[0].reset();
+                    // Reload page to refresh user list
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    showUserAlert(response.message || 'Failed to create user.', 'danger');
+                    if (response.errors) {
+                        $.each(response.errors, function(field, error) {
+                            var input = form.find('[name="' + field + '"]');
+                            input.addClass('is-invalid');
+                            input.siblings('.invalid-feedback').text(error);
+                        });
+                    }
+                }
+            },
+            error: function(xhr) {
+                var message = 'An error occurred while creating the user.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showUserAlert(message, 'danger');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+
+    // Role Change Handler
+    $(document).on('change', '.role-select', function() {
+        var select = $(this);
+        var userId = select.data('user-id');
+        var newRole = select.val();
+        var originalRole = select.data('original-role') || select.find('option:selected').text();
+        
+        if (!confirm('Are you sure you want to change this user\'s role to ' + newRole + '?')) {
+            select.val(originalRole);
+            return;
+        }
+        
+        select.prop('disabled', true);
+        
+        $.ajax({
+            url: '<?= base_url('users/updateRole') ?>',
+            type: 'POST',
+            data: {
+                user_id: userId,
+                role: newRole
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showUserAlert(response.message, 'success');
+                    select.data('original-role', newRole);
+                } else {
+                    showUserAlert(response.message || 'Failed to update role.', 'danger');
+                    select.val(originalRole);
+                }
+            },
+            error: function(xhr) {
+                var message = 'An error occurred while updating the role.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showUserAlert(message, 'danger');
+                select.val(originalRole);
+            },
+            complete: function() {
+                select.prop('disabled', false);
+            }
+        });
+    });
+
+    // Toggle Status (Activate/Deactivate)
+    $(document).on('click', '.toggle-status-btn', function() {
+        var btn = $(this);
+        var userId = btn.data('user-id');
+        var currentStatus = btn.data('status');
+        var action = currentStatus === 'active' ? 'deactivate' : 'activate';
+        
+        if (!confirm('Are you sure you want to ' + action + ' this user?')) {
+            return;
+        }
+        
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: '<?= base_url('users/toggleStatus') ?>',
+            type: 'POST',
+            data: {
+                user_id: userId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showUserAlert(response.message, 'success');
+                    // Update UI
+                    var row = btn.closest('tr');
+                    var statusBadge = row.find('td:nth-child(5) .badge');
+                    var newStatus = response.status;
+                    
+                    statusBadge.removeClass('bg-success bg-secondary')
+                               .addClass(newStatus === 'active' ? 'bg-success' : 'bg-secondary')
+                               .text(newStatus.charAt(0).toUpperCase() + newStatus.slice(1));
+                    
+                    btn.removeClass('btn-outline-warning btn-outline-success')
+                       .addClass(newStatus === 'active' ? 'btn-outline-warning' : 'btn-outline-success')
+                       .text(newStatus === 'active' ? 'Deactivate' : 'Activate')
+                       .data('status', newStatus);
+                } else {
+                    showUserAlert(response.message || 'Failed to update status.', 'danger');
+                }
+            },
+            error: function(xhr) {
+                var message = 'An error occurred while updating the status.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showUserAlert(message, 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
+    // Delete User Handler
+    $(document).on('click', '.delete-user-btn', function() {
+        var btn = $(this);
+        var userId = btn.data('user-id');
+        
+        if (!confirm('Are you sure you want to deactivate this user? The account will be marked as inactive but not deleted from the database.')) {
+            return;
+        }
+        
+        btn.prop('disabled', true);
+        
+        $.ajax({
+            url: '<?= base_url('users/delete') ?>',
+            type: 'POST',
+            data: {
+                user_id: userId
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showUserAlert(response.message, 'success');
+                    // Update UI to show inactive status
+                    var row = btn.closest('tr');
+                    var statusBadge = row.find('td:nth-child(5) .badge');
+                    var toggleBtn = row.find('.toggle-status-btn');
+                    
+                    statusBadge.removeClass('bg-success').addClass('bg-secondary').text('Inactive');
+                    toggleBtn.removeClass('btn-outline-warning').addClass('btn-outline-success')
+                             .text('Activate').data('status', 'inactive');
+                    btn.hide();
+                } else {
+                    showUserAlert(response.message || 'Failed to deactivate user.', 'danger');
+                }
+            },
+            error: function(xhr) {
+                var message = 'An error occurred while deactivating the user.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showUserAlert(message, 'danger');
+            },
+            complete: function() {
+                btn.prop('disabled', false);
+            }
+        });
+    });
+
+    // Change Password Modal Handler
+    $(document).on('click', '.change-password-btn', function() {
+        var userId = $(this).data('user-id');
+        $('#passwordUserId').val(userId);
+        $('#changePasswordForm')[0].reset();
+        $('#changePasswordForm').find('.is-invalid').removeClass('is-invalid');
+    });
+
+    // Change Password Form Submission
+    $('#changePasswordForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        var originalText = submitBtn.text();
+        
+        submitBtn.prop('disabled', true).text('Updating...');
+        
+        // Clear previous validation errors
+        form.find('.is-invalid').removeClass('is-invalid');
+        form.find('.invalid-feedback').text('');
+        
+        $.ajax({
+            url: '<?= base_url('users/updatePassword') ?>',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showUserAlert(response.message, 'success');
+                    $('#changePasswordModal').modal('hide');
+                    form[0].reset();
+                } else {
+                    showUserAlert(response.message || 'Failed to update password.', 'danger');
+                    if (response.errors) {
+                        $.each(response.errors, function(field, error) {
+                            var input = form.find('[name="' + field + '"]');
+                            input.addClass('is-invalid');
+                            input.siblings('.invalid-feedback').text(error);
+                        });
+                    }
+                }
+            },
+            error: function(xhr) {
+                var message = 'An error occurred while updating the password.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showUserAlert(message, 'danger');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
 });
 </script>
