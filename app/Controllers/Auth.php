@@ -79,6 +79,11 @@ class Auth extends BaseController
             $user = $userModel->where('email', $email)->first();
             
             if ($user && password_verify($password, $user['password'])) {
+                // Check if user is active
+                if (isset($user['status']) && $user['status'] === 'inactive') {
+                    return redirect()->back()->with('login_error', 'Your account has been deactivated. Please contact an administrator.');
+                }
+
                 $session->set([
                     'isLoggedIn' => true,
                     'userId' => $user['id'] ?? null,
