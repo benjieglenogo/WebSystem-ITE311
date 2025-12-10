@@ -148,6 +148,9 @@
     &copy; <?= date('Y') ?> ITE-311 • All rights reserved.
   </footer>
 
+  <!-- Scripts -->
+  <?= $this->renderSection('scripts') ?>
+
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 

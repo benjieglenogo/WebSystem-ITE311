@@ -300,7 +300,8 @@
 						<h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
-					<form id="addUserForm">
+					<form id="addUserForm" action="<?= base_url('users/create') ?>" method="post">
+						<?= csrf_field() ?>
 						<div class="modal-body">
 							<div class="mb-3">
 								<label for="userName" class="form-label">Full Name</label>
@@ -348,6 +349,7 @@
 					</div>
 					<form id="changePasswordForm">
 						<input type="hidden" id="passwordUserId" name="user_id">
+						<?= csrf_field() ?>
 						<div class="modal-body">
 							<div class="mb-3">
 								<label for="newPassword" class="form-label">New Password</label>
@@ -375,6 +377,7 @@
 					</div>
 					<form id="forwardMaterialForm">
 						<input type="hidden" id="forwardMaterialId" name="material_id">
+						<?= csrf_field() ?>
 						<div class="modal-body">
 							<div class="mb-3">
 								<label for="targetCourseId" class="form-label">Select Target Course</label>
@@ -744,41 +747,6 @@
 			</div>
 		</div>
 	<?php endif; ?>
-<script>
-$(document).ready(function() {
-	// Server-side search with AJAX for dashboard
-	$('#searchForm').submit(function(e) {
-		e.preventDefault();
-		var searchTerm = $('#searchInput').val();
-		$.ajax({
-			url: '/courses/search',
-			type: 'GET',
-			data: { search_term: searchTerm },
-			success: function(data) {
-				var $coursesContainer = $('#coursesContainer');
-				$coursesContainer.empty();
-				if (data.length > 0) {
-					data.forEach(function(course) {
-						$coursesContainer.append(
-							'<div class="col-md-4 mb-4">' +
-								'<div class="card course-card">' +
-									'<div class="card-body">' +
-										'<h5 class="card-title">' + course.course_name + '</h5>' +
-										'<p class="card-text">' + course.course_description + '</p>' +
-										'<a href="/courses/view/' + course.id + '" class="btn btn-primary">View Course</a>' +
-									'</div>' +
-								'</div>' +
-							'</div>'
-						);
-					});
-				} else {
-					$coursesContainer.html('<div class="col-12 text-center"><div class="alert alert-info">No courses found matching your search.</div></div>');
-				}
-			}
-		});
-	});
-});
-</script>
 <?= $this->endSection() ?>
 <!-- Search Results Modal -->
 <div class="modal fade" id="searchResultsModal" tabindex="-1" aria-labelledby="searchResultsModalLabel" aria-hidden="true">
@@ -798,6 +766,8 @@ $(document).ready(function() {
 	</div>
 </div>
 
+
+<?= $this->section('scripts') ?>
 <script>
 // Client-side filtering and AJAX server-side search for courses
 $(function(){
@@ -1099,7 +1069,9 @@ $(function(){
     }
 
     // ==================== USER MANAGEMENT FUNCTIONS ====================
-    
+
+    var csrfName = '<?= csrf_token() ?>';
+
     // Helper function to show alerts
     function showUserAlert(message, type) {
         var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
@@ -1132,13 +1104,56 @@ $(function(){
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
+                    // Dynamically add the new user to the table instead of reloading
+                    var newRow = `
+                        <tr data-user-id="${response.user_id}" data-protected="0">
+                            <td>${response.user_id}</td>
+                            <td>${escapeHtml(form.find('[name="name"]').val())}</td>
+                            <td>${escapeHtml(form.find('[name="email"]').val())}</td>
+                            <td>
+                                <select class="form-select form-select-sm role-select" data-user-id="${response.user_id}" style="width: auto; display: inline-block;">
+                                    <option value="student" ${form.find('[name="role"]').val() === 'student' ? 'selected' : ''}>Student</option>
+                                    <option value="teacher" ${form.find('[name="role"]').val() === 'teacher' ? 'selected' : ''}>Teacher</option>
+                                    <option value="admin" ${form.find('[name="role"]').val() === 'admin' ? 'selected' : ''}>Admin</option>
+                                </select>
+                            </td>
+                            <td>
+                                <span class="badge bg-success">Active</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-warning toggle-status-btn" data-user-id="${response.user_id}" data-status="active">
+                                    Deactivate
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="${response.user_id}">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    $('#usersTable tbody').append(newRow);
+
+                    // Update the total users count
+                    var currentCount = parseInt($('.stat-card .text-primary').first().text()) || 0;
+                    $('.stat-card .text-primary').first().text(currentCount + 1);
+
+                    // Update role-specific counts
+                    var userRole = form.find('[name="role"]').val();
+                    if (userRole === 'student') {
+                        var studentCount = parseInt($('.col-md-4 .text-primary').first().text()) || 0;
+                        $('.col-md-4 .text-primary').first().text(studentCount + 1);
+                    } else if (userRole === 'teacher') {
+                        var teacherCount = parseInt($('.col-md-4 .text-info').first().text()) || 0;
+                        $('.col-md-4 .text-info').first().text(teacherCount + 1);
+                    } else if (userRole === 'admin') {
+                        var adminCount = parseInt($('.col-md-4 .text-warning').first().text()) || 0;
+                        $('.col-md-4 .text-warning').first().text(adminCount + 1);
+                    }
+
                     showUserAlert(response.message, 'success');
                     $('#addUserModal').modal('hide');
                     form[0].reset();
-                    // Reload page to refresh user list
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500); // Increased delay to ensure alert is visible
+                    // Refresh the page to ensure all server-side data is updated
+                    location.reload();
                 } else {
                     showUserAlert(response.message || 'Failed to create user.', 'danger');
                     if (response.errors) {
@@ -1162,36 +1177,48 @@ $(function(){
             }
         });
     });
+    });
 
     // Role Change Handler
     $(document).on('change', '.role-select', function() {
         var select = $(this);
         var userId = select.data('user-id');
         var newRole = select.val();
-        var originalRole = select.data('original-role') || select.find('option:selected').text();
-        
+        var originalValue = select.val() === newRole ? select.data('original-role') : select.val();
+
+        // Store original if not set
+        if (!select.data('original-role')) {
+            select.data('original-role', originalValue);
+        } else {
+            originalValue = select.data('original-role');
+        }
+
         if (!confirm('Are you sure you want to change this user\'s role to ' + newRole + '?')) {
-            select.val(originalRole);
+            select.val(originalValue);
             return;
         }
-        
+
         select.prop('disabled', true);
-        
+
+        var csrfToken = $('input[name="' + csrfName + '"]').val();
+
         $.ajax({
             url: '<?= base_url('users/updateRole') ?>',
             type: 'POST',
             data: {
                 user_id: userId,
-                role: newRole
+                role: newRole,
+                [csrfName]: csrfToken
             },
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
                     showUserAlert(response.message, 'success');
                     select.data('original-role', newRole);
+                    csrfToken = $('input[name="' + csrfName + '"]').val(); // Update CSRF token
                 } else {
                     showUserAlert(response.message || 'Failed to update role.', 'danger');
-                    select.val(originalRole);
+                    select.val(originalValue);
                 }
             },
             error: function(xhr) {
@@ -1200,7 +1227,7 @@ $(function(){
                     message = xhr.responseJSON.message;
                 }
                 showUserAlert(message, 'danger');
-                select.val(originalRole);
+                select.val(originalValue);
             },
             complete: function() {
                 select.prop('disabled', false);
@@ -1214,18 +1241,21 @@ $(function(){
         var userId = btn.data('user-id');
         var currentStatus = btn.data('status');
         var action = currentStatus === 'active' ? 'deactivate' : 'activate';
-        
+
         if (!confirm('Are you sure you want to ' + action + ' this user?')) {
             return;
         }
-        
+
         btn.prop('disabled', true);
-        
+
+        var csrfToken = $('input[name="' + csrfName + '"]').val();
+
         $.ajax({
             url: '<?= base_url('users/toggleStatus') ?>',
             type: 'POST',
             data: {
-                user_id: userId
+                user_id: userId,
+                [csrfName]: csrfToken
             },
             dataType: 'json',
             success: function(response) {
@@ -1265,18 +1295,21 @@ $(function(){
     $(document).on('click', '.delete-user-btn', function() {
         var btn = $(this);
         var userId = btn.data('user-id');
-        
+
         if (!confirm('Are you sure you want to deactivate this user? The account will be marked as inactive but not deleted from the database.')) {
             return;
         }
-        
+
         btn.prop('disabled', true);
-        
+
+        var csrfToken = $('input[name="' + csrfName + '"]').val();
+
         $.ajax({
             url: '<?= base_url('users/delete') ?>',
             type: 'POST',
             data: {
-                user_id: userId
+                user_id: userId,
+                [csrfName]: csrfToken
             },
             dataType: 'json',
             success: function(response) {
@@ -1423,3 +1456,39 @@ $(function(){
     });
 });
 </script>
+<script>
+$(document).ready(function() {
+	// Server-side search with AJAX for dashboard
+	$('#searchForm').submit(function(e) {
+		e.preventDefault();
+		var searchTerm = $('#searchInput').val();
+		$.ajax({
+			url: '/courses/search',
+			type: 'GET',
+			data: { search_term: searchTerm },
+			success: function(data) {
+				var $coursesContainer = $('#coursesContainer');
+				$coursesContainer.empty();
+				if (data.length > 0) {
+					data.forEach(function(course) {
+						$coursesContainer.append(
+							'<div class="col-md-4 mb-4">' +
+								'<div class="card course-card">' +
+									'<div class="card-body">' +
+										'<h5 class="card-title">' + course.course_name + '</h5>' +
+										'<p class="card-text">' + course.course_description + '</p>' +
+										'<a href="/courses/view/' + course.id + '" class="btn btn-primary">View Course</a>' +
+									'</div>' +
+								'</div>' +
+							'</div>'
+						);
+					});
+				} else {
+					$coursesContainer.html('<div class="col-12 text-center"><div class="alert alert-info">No courses found matching your search.</div></div>');
+				}
+			}
+		});
+	});
+});
+</script>
+<?= $this->endSection() ?>

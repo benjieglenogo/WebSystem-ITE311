@@ -35,7 +35,11 @@ class Users extends BaseController
     {
         $session = session();
         if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'admin') {
-            return $this->response->setJSON(['success' => false, 'message' => 'Access denied.'])->setStatusCode(403);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Access denied.'])->setStatusCode(403);
+            } else {
+                return redirect()->to(base_url('dashboard'))->with('error', 'Access denied.');
+            }
         }
 
         $validation = \Config\Services::validation();
@@ -51,11 +55,15 @@ class Users extends BaseController
         ]);
 
         if (!$validation->withRequest($this->request)->run()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Validation failed.',
-                'errors' => $validation->getErrors()
-            ])->setStatusCode(400);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $validation->getErrors()
+                ])->setStatusCode(400);
+            } else {
+                return redirect()->back()->withInput()->with('error', 'Validation failed: ' . implode(', ', $validation->getErrors()));
+            }
         }
 
         $name = trim($this->request->getPost('name'));
@@ -65,10 +73,14 @@ class Users extends BaseController
 
         // Check for duplicate email
         if ($this->userModel->where('email', $email)->first()) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Email already exists.'
-            ])->setStatusCode(400);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Email already exists.'
+                ])->setStatusCode(400);
+            } else {
+                return redirect()->back()->withInput()->with('error', 'Email already exists.');
+            }
         }
 
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
@@ -82,17 +94,27 @@ class Users extends BaseController
             'is_protected' => 0,
         ];
 
-        if ($this->userModel->insert($data)) {
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'User created successfully.'
-            ]);
+        $userId = $this->userModel->insert($data);
+        if ($userId) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'User created successfully.',
+                    'user_id' => $userId
+                ]);
+            } else {
+                return redirect()->to(base_url('dashboard'))->with('success', 'User created successfully.');
+            }
         }
 
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Failed to create user.'
-        ])->setStatusCode(500);
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to create user.'
+            ])->setStatusCode(500);
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to create user.');
+        }
     }
 
     /**
@@ -303,4 +325,3 @@ class Users extends BaseController
         ])->setStatusCode(500);
     }
 }
-

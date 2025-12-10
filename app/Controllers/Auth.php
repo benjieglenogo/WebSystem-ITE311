@@ -148,8 +148,8 @@ class Auth extends BaseController
             $data['widgets']['teachers'] = $userModel->where('role', 'teacher')->countAllResults();
             $data['widgets']['admins'] = $userModel->where('role', 'admin')->countAllResults();
             
-            // Get all users for management
-            $data['allUsers'] = $userModel->findAll();
+            // Get all users for management (excluding inactive users by default, or show all for admin overview)
+            $data['allUsers'] = $userModel->where('status !=', 'inactive')->findAll();
             $data['allCourses'] = $courseModel->findAll();
             
             // Get all materials for admin
