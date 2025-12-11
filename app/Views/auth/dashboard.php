@@ -365,43 +365,46 @@
 			</div>
 		</div>
 
-
-
-		<!-- Upload Material Section for Admin -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">Upload Course Material</h5>
-				<form action="<?= base_url('materials/upload') ?>" method="post" enctype="multipart/form-data">
-					<div class="row">
-						<div class="col-md-4 mb-3">
-							<label for="course_id_admin" class="form-label">Select Course</label>
-							<select class="form-select" id="course_id_admin" name="course_id" required>
-								<option value="">Choose a course...</option>
-								<?php if (isset($allCourses) && !empty($allCourses)): ?>
-									<?php foreach ($allCourses as $course): ?>
-										<option value="<?= esc($course['id']) ?>">
-											<?= esc($course['course_name'] ?? 'Unnamed Course') ?>
-											<?php if (isset($course['course_code'])): ?>
-												(<?= esc($course['course_code']) ?>)
-											<?php endif; ?>
-										</option>
-									<?php endforeach; ?>
-								<?php else: ?>
-									<option value="">No courses available</option>
-								<?php endif; ?>
-							</select>
-						</div>
-						<div class="col-md-6 mb-3">
-							<label for="material_file_admin" class="form-label">Select File</label>
-							<input type="file" class="form-control" id="material_file_admin" name="material_file" required>
-						</div>
-						<div class="col-md-2 mb-3 d-flex align-items-end">
-							<button type="submit" class="btn btn-primary w-100">Upload</button>
-						</div>
+		<!-- Forward Material Modal -->
+		<div class="modal fade" id="forwardMaterialModal" tabindex="-1" aria-labelledby="forwardMaterialModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="forwardMaterialModalLabel">Forward Material to Another Course</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
-				</form>
+					<form id="forwardMaterialForm">
+						<input type="hidden" id="forwardMaterialId" name="material_id">
+						<div class="modal-body">
+							<div class="mb-3">
+								<label for="targetCourseId" class="form-label">Select Target Course</label>
+								<select class="form-select" id="targetCourseId" name="target_course_id" required>
+									<option value="">Choose a course...</option>
+									<?php if (isset($teacherCourses) && !empty($teacherCourses)): ?>
+										<?php foreach ($teacherCourses as $course): ?>
+											<option value="<?= esc($course['id']) ?>">
+												<?= esc($course['course_name'] ?? 'Unnamed Course') ?>
+												<?php if (isset($course['course_code'])): ?>
+													(<?= esc($course['course_code']) ?>)
+												<?php endif; ?>
+											</option>
+										<?php endforeach; ?>
+									<?php else: ?>
+										<option value="">No courses available</option>
+									<?php endif; ?>
+								</select>
+								<div class="invalid-feedback"></div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-primary">Forward Material</button>
+						</div>
+					</form>
+				</div>
 			</div>
 		</div>
+
 
 		<!-- All Materials Management -->
 		<div class="card border-0 shadow-lg rounded-4 mb-4">
@@ -548,6 +551,7 @@
 										<td>
 											<a href="<?= base_url('materials/download/' . $material['id']) ?>" class="btn btn-sm btn-outline-primary">Download</a>
 											<a href="<?= base_url('materials/delete/' . $material['id']) ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this material?')">Delete</a>
+											<button class="btn btn-sm btn-outline-info forward-material-btn" data-material-id="<?= esc($material['id']) ?>" data-bs-toggle="modal" data-bs-target="#forwardMaterialModal">Forward</button>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -1114,13 +1118,13 @@ $(function(){
         var form = $(this);
         var submitBtn = form.find('button[type="submit"]');
         var originalText = submitBtn.text();
-        
+
         submitBtn.prop('disabled', true).text('Creating...');
-        
+
         // Clear previous validation errors
         form.find('.is-invalid').removeClass('is-invalid');
         form.find('.invalid-feedback').text('');
-        
+
         $.ajax({
             url: '<?= base_url('users/create') ?>',
             type: 'POST',
@@ -1134,7 +1138,7 @@ $(function(){
                     // Reload page to refresh user list
                     setTimeout(function() {
                         location.reload();
-                    }, 1000);
+                    }, 1500); // Increased delay to ensure alert is visible
                 } else {
                     showUserAlert(response.message || 'Failed to create user.', 'danger');
                     if (response.errors) {
@@ -1318,13 +1322,13 @@ $(function(){
         var form = $(this);
         var submitBtn = form.find('button[type="submit"]');
         var originalText = submitBtn.text();
-        
+
         submitBtn.prop('disabled', true).text('Updating...');
-        
+
         // Clear previous validation errors
         form.find('.is-invalid').removeClass('is-invalid');
         form.find('.invalid-feedback').text('');
-        
+
         $.ajax({
             url: '<?= base_url('users/updatePassword') ?>',
             type: 'POST',
@@ -1348,6 +1352,65 @@ $(function(){
             },
             error: function(xhr) {
                 var message = 'An error occurred while updating the password.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+                showUserAlert(message, 'danger');
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
+
+    // Forward Material Modal Handler
+    $(document).on('click', '.forward-material-btn', function() {
+        var materialId = $(this).data('material-id');
+        $('#forwardMaterialId').val(materialId);
+        $('#forwardMaterialForm')[0].reset();
+        $('#forwardMaterialForm').find('.is-invalid').removeClass('is-invalid');
+    });
+
+    // Forward Material Form Submission
+    $('#forwardMaterialForm').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var submitBtn = form.find('button[type="submit"]');
+        var originalText = submitBtn.text();
+
+        submitBtn.prop('disabled', true).text('Forwarding...');
+
+        // Clear previous validation errors
+        form.find('.is-invalid').removeClass('is-invalid');
+        form.find('.invalid-feedback').text('');
+
+        $.ajax({
+            url: '<?= base_url('materials/forward') ?>',
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    showUserAlert(response.message, 'success');
+                    $('#forwardMaterialModal').modal('hide');
+                    form[0].reset();
+                    // Reload page to refresh materials list
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showUserAlert(response.message || 'Failed to forward material.', 'danger');
+                    if (response.errors) {
+                        $.each(response.errors, function(field, error) {
+                            var input = form.find('[name="' + field + '"]');
+                            input.addClass('is-invalid');
+                            input.siblings('.invalid-feedback').text(error);
+                        });
+                    }
+                }
+            },
+            error: function(xhr) {
+                var message = 'An error occurred while forwarding the material.';
                 if (xhr.responseJSON && xhr.responseJSON.message) {
                     message = xhr.responseJSON.message;
                 }

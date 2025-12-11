@@ -80,7 +80,8 @@ class Materials extends BaseController
                 ];
 
                 if ($materialModel->insert($data)) {
-                    return redirect()->to(base_url('dashboard'))->with('success', 'Material uploaded successfully!');
+                    // Add cache busting timestamp to prevent cached page display
+                    return redirect()->to(base_url('dashboard') . '?t=' . time())->with('success', 'Material uploaded successfully!');
                 } else {
                     // Delete uploaded file if database insert failed
                     unlink(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $filePath);
@@ -92,7 +93,7 @@ class Materials extends BaseController
         }
 
         // GET request - show upload form (this would be handled in dashboard view now)
-        return redirect()->to(base_url('dashboard'));
+        return redirect()->to(base_url('dashboard') . '?t=' . time());
     }
 
     /**
@@ -144,12 +145,68 @@ class Materials extends BaseController
     }
 
     /**
+     * Forward material to another course
+     */
+    public function forward()
+    {
+        $session = session();
+
+        // Check if user is logged in
+        if (! $session->get('isLoggedIn')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        // Check if user is admin
+        $userRole = $session->get('userRole');
+        if ($userRole !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Only admins can forward materials.']);
+        }
+
+        // Get POST data
+        $materialId = $this->request->getPost('material_id');
+        $targetCourseId = $this->request->getPost('target_course_id');
+
+        if (!$materialId || !$targetCourseId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Material ID and target course ID are required.']);
+        }
+
+        $materialModel = new MaterialModel();
+        $courseModel = new CourseModel();
+
+        // Get the original material
+        $originalMaterial = $materialModel->find($materialId);
+        if (!$originalMaterial) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Material not found.']);
+        }
+
+        // Check if target course exists
+        $targetCourse = $courseModel->find($targetCourseId);
+        if (!$targetCourse) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Target course not found.']);
+        }
+
+        // Copy the material to the target course
+        $data = [
+            'course_id' => $targetCourseId,
+            'file_name' => $originalMaterial['file_name'],
+            'file_path' => $originalMaterial['file_path'],
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        if ($materialModel->insert($data)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Material forwarded successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to forward material.']);
+        }
+    }
+
+    /**
      * Delete material
      */
     public function delete($materialId = null)
     {
         $session = session();
-        
+
         // Check if user is logged in
         if (! $session->get('isLoggedIn')) {
             return redirect()->to(base_url('login'));
@@ -180,7 +237,8 @@ class Materials extends BaseController
 
         // Delete from database
         if ($materialModel->delete($materialId)) {
-            return redirect()->to(base_url('dashboard'))->with('success', 'Material deleted successfully!');
+            // Add cache busting timestamp to prevent cached page display
+            return redirect()->to(base_url('dashboard') . '?t=' . time())->with('success', 'Material deleted successfully!');
         } else {
             return redirect()->back()->with('error', 'Failed to delete material.');
         }
