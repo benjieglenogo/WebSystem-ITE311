@@ -37,11 +37,13 @@ class CourseModel extends Model
 
         $enrolled_ids = array_column($enrolled_course_ids, 'course_id');
 
-        // Get all active courses
-        $builder = $this->where('status', 'active');
+        // Get all active courses with teacher info
+        $builder = $this->select('courses.*, users.name as teacher_name')
+            ->join('users', 'users.id = courses.teacher_id', 'left')
+            ->where('courses.status', 'active');
 
         if (!empty($enrolled_ids)) {
-            $builder->whereNotIn('id', $enrolled_ids);
+            $builder->whereNotIn('courses.id', $enrolled_ids);
         }
 
         return $builder->findAll();

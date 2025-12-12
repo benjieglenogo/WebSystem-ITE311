@@ -28,11 +28,26 @@ class EnrollmentModel extends Model
      */
     public function getUserEnrollments($user_id)
     {
-        return $this->select('enrollments.*, courses.id as course_id, courses.course_name, courses.course_code, courses.description, courses.teacher_id, users.name as teacher_name')
-                    ->join('courses', 'courses.id = enrollments.course_id')
-                    ->join('users', 'users.id = courses.teacher_id', 'left')
-                    ->where('enrollments.user_id', $user_id)
-                    ->findAll();
+        // Check if teacher_id column exists before trying to join
+        if ($this->db->fieldExists('teacher_id', 'courses')) {
+            $select = 'enrollments.*, courses.id as course_id, courses.course_name, courses.course_code, courses.description, courses.teacher_id, users.name as teacher_name';
+
+            $query = $this->select($select)
+                          ->join('courses', 'courses.id = enrollments.course_id')
+                          ->join('users', 'users.id = courses.teacher_id', 'left');
+
+            return $query->where('enrollments.user_id', $user_id)
+                         ->findAll();
+        } else {
+            // Fallback query without teacher information
+            $select = 'enrollments.*, courses.id as course_id, courses.course_name, courses.course_code, courses.description';
+
+            $query = $this->select($select)
+                          ->join('courses', 'courses.id = enrollments.course_id');
+
+            return $query->where('enrollments.user_id', $user_id)
+                         ->findAll();
+        }
     }
 
     /**

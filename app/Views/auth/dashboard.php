@@ -164,6 +164,19 @@
 			max-width: 200px;
 			text-align: center;
 		}
+
+		/* Course card styles for student section */
+		.course-card {
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+			transition: transform 0.2s ease, box-shadow 0.2s ease;
+			height: 100%;
+		}
+
+		.course-card:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+		}
 	</style>
 
 	<div class="dashboard-container">
@@ -362,9 +375,10 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="<?= base_url('materials/course/' . esc($course['id'])) ?>" class="btn btn-sm btn-info" title="View Materials">
+                                            <button onclick="showMaterialsModal(<?= $course['id'] ?>, '<?= esc($course['course_name']) ?>', true)"
+                                                    class="btn btn-sm btn-info" title="View Materials">
                                                 <i class="bi bi-folder"></i> Materials
-                                            </a>
+                                            </button>
                                             <a href="<?= base_url('teacher/course/' . esc($course['id']) . '/upload') ?>" class="btn btn-sm btn-success" title="Upload Material">
                                                 <i class="bi bi-upload"></i> Upload
                                             </a>
@@ -385,26 +399,70 @@
 			<div class="mb-4">
 				<div class="btn-group" role="group" aria-label="Student navigation">
 					<a href="<?= base_url('student/courses') ?>" class="btn btn-outline-primary">
-						<i class="bi bi-book"></i> Browse & Enroll in Courses
+						<i class="bi bi-book"></i> Browse All Available Courses
 					</a>
 				</div>
 			</div>
 
 			<!-- Summary Cards -->
 			<div class="row mb-4">
-				<div class="col-md-6">
+				<div class="col-md-4">
 					<div class="summary-card">
-						<p>Enrolled Courses</p>
+						<p>My Enrolled Courses</p>
 						<h3><?= isset($enrolledCourses) ? count($enrolledCourses) : 0 ?></h3>
 					</div>
 				</div>
-				<div class="col-md-6">
+				<div class="col-md-4">
+					<div class="summary-card" style="border-left: 4px solid #ffc107;">
+						<p>Available Courses</p>
+						<h3><?= isset($widgets['available']) ? (int)$widgets['available'] : 0 ?></h3>
+					</div>
+				</div>
+				<div class="col-md-4">
 					<div class="summary-card" style="border-left: 4px solid #28a745;">
-						<p>Available Materials</p>
+						<p>Course Materials</p>
 						<h3><?= isset($materials) ? count($materials) : 0 ?></h3>
 					</div>
 				</div>
 			</div>
+
+			<!-- Available Courses Section -->
+			<?php if (isset($availableCourses) && !empty($availableCourses)): ?>
+			<div class="courses-table mb-4">
+				<div class="d-flex justify-content-between align-items-center mb-3">
+					<h3 class="mb-0">Available Courses for Enrollment</h3>
+				</div>
+
+				<div class="row">
+					<?php foreach ($availableCourses as $course): ?>
+						<div class="col-lg-4 col-md-6 mb-4">
+							<div class="card course-card h-100">
+								<div class="card-body d-flex flex-column">
+									<div class="d-flex justify-content-between align-items-start mb-2">
+										<div class="course-code badge bg-primary mb-1"><?= esc($course['course_code'] ?? 'N/A') ?></div>
+										<div class="course-code badge bg-secondary mb-1"><?= esc($course['school_year'] ?? '2024-2025') ?></div>
+									</div>
+									<h6 class="card-title fw-bold mb-2"><?= esc($course['course_name'] ?? 'N/A') ?></h6>
+									<p class="card-text text-muted small mb-2 flex-grow-1"><?= esc($course['description'] ?? 'No description available.') ?></p>
+
+									<div class="mt-auto">
+										<div class="d-flex justify-content-between align-items-center mb-2">
+											<small class="text-muted"><i class="bi bi-person"></i> <?= esc($course['teacher_name'] ?? 'Unassigned') ?></small>
+											<small class="text-muted"><i class="bi bi-calendar"></i> <?= esc($course['schedule'] ?? 'N/A') ?></small>
+										</div>
+										<button class="btn btn-success btn-sm w-100 enroll-btn"
+												data-course-id="<?= esc($course['id']) ?>"
+												data-course-name="<?= esc($course['course_name']) ?>">
+											<i class="bi bi-plus"></i> Enroll Now
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					<?php endforeach; ?>
+				</div>
+			</div>
+			<?php endif; ?>
 
 			<!-- Student's Enrolled Courses -->
 			<div class="courses-table">
@@ -427,9 +485,10 @@
 										<td><?= esc($course['course_name'] ?? 'N/A') ?></td>
 										<td><?= esc($course['teacher_name'] ?? 'Unassigned') ?></td>
                                         <td>
-                                            <a href="<?= base_url('materials/course/' . esc($course['course_id'])) ?>" class="btn btn-sm btn-primary">
+                                            <button onclick="showMaterialsModal(<?= $course['course_id'] ?>, '<?= esc($course['course_name']) ?>', false)"
+                                                    class="btn btn-sm btn-primary">
                                                 <i class="bi bi-folder"></i> View Materials
-                                            </a>
+                                            </button>
                                         </td>
 									</tr>
 								<?php endforeach; ?>
@@ -444,6 +503,9 @@
 			</div>
 		<?php endif; ?>
 	</div>
+
+	<!-- Include Materials Modal -->
+	<?= $this->include('materials/modal') ?>
 
 	<!-- Create Course Modal -->
 	<div class="modal fade" id="createCourseModal" tabindex="-1" aria-labelledby="createCourseModalLabel" aria-hidden="true">

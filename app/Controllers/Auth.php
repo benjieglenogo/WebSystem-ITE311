@@ -62,7 +62,7 @@ class Auth extends BaseController
         return view('register');
     }
 
-    // Login 
+    // Login
     public function login()
     {
         $session = session();
@@ -75,29 +75,34 @@ class Auth extends BaseController
             $email = trim((string) $this->request->getPost('email'));
             $password = (string) $this->request->getPost('password');
 
-            $userModel = new \App\Models\UserModel();
-            $user = $userModel->where('email', $email)->first();
-            
-            if ($user && password_verify($password, $user['password'])) {
-                // Check if user is active
-                if (isset($user['status']) && $user['status'] === 'inactive') {
-                    return redirect()->back()->with('login_error', 'Your account has been deactivated. Please contact an administrator.');
+            try {
+                $userModel = new \App\Models\UserModel();
+                $user = $userModel->where('email', $email)->first();
+
+                if ($user && password_verify($password, $user['password'])) {
+                    // Check if user is active
+                    if (isset($user['status']) && $user['status'] === 'inactive') {
+                        return redirect()->back()->with('login_error', 'Your account has been deactivated. Please contact an administrator.');
+                    }
+
+                    $session->set([
+                        'isLoggedIn' => true,
+                        'userId' => $user['id'] ?? null,
+                        'userName' => $user['name'] ?? null,
+                        'userEmail' => $user['email'] ?? $email,
+                        'userRole' => $user['role'] ?? 'student',
+                    ]);
+
+                    // Role-based redirection - all roles go to unified dashboard
+                    $role = $user['role'] ?? 'student';
+                    return redirect()->to(base_url('dashboard'));
                 }
 
-                $session->set([
-                    'isLoggedIn' => true,
-                    'userId' => $user['id'] ?? null,
-                    'userName' => $user['name'] ?? null,
-                    'userEmail' => $user['email'] ?? $email,
-                    'userRole' => $user['role'] ?? 'student',
-                ]);
-
-                // Role-based redirection - all roles go to unified dashboard
-                $role = $user['role'] ?? 'student';
-                return redirect()->to(base_url('dashboard'));
+                return redirect()->back()->with('login_error', 'Invalid credentials');
+            } catch (\Exception $e) {
+                log_message('error', 'Login error: ' . $e->getMessage());
+                return redirect()->back()->with('login_error', 'A system error occurred. Please try again later.');
             }
-
-            return redirect()->back()->with('login_error', 'Invalid credentials');
         }
 
         return view('login');
@@ -131,106 +136,156 @@ class Auth extends BaseController
             'widgets' => [],
         ];
 
-        $materialModel = new \App\Models\MaterialModel();
+        try {
+            $materialModel = new \App\Models\MaterialModel();
 
-        if ($role === 'admin') {
-            $userModel = new \App\Models\UserModel();
-            $courseModel = new \App\Models\CourseModel();
-            $enrollmentModel = new \App\Models\EnrollmentModel();
+            if ($role === 'admin') {
+                $userModel = new \App\Models\UserModel();
+                $courseModel = new \App\Models\CourseModel();
+                $enrollmentModel = new \App\Models\EnrollmentModel();
 
-            // Admin-specific statistics
-            $data['widgets']['users'] = $userModel->countAllResults();
-            $data['widgets']['courses'] = $courseModel->countAllResults();
-            $data['widgets']['enrollments'] = $enrollmentModel->countAllResults();
+                // Admin-specific statistics
+                $data['widgets']['users'] = $userModel->countAllResults();
+                $data['widgets']['courses'] = $courseModel->countAllResults();
+                $data['widgets']['enrollments'] = $enrollmentModel->countAllResults();
 
-            // Get user counts by role
-            $data['widgets']['students'] = $userModel->where('role', 'student')->countAllResults();
-            $data['widgets']['teachers'] = $userModel->where('role', 'teacher')->countAllResults();
-            $data['widgets']['admins'] = $userModel->where('role', 'admin')->countAllResults();
+                // Get user counts by role
+                $data['widgets']['students'] = $userModel->where('role', 'student')->countAllResults();
+                $data['widgets']['teachers'] = $userModel->where('role', 'teacher')->countAllResults();
+                $data['widgets']['admins'] = $userModel->where('role', 'admin')->countAllResults();
 
-            // Get all users for management (excluding inactive users by default, or show all for admin overview)
-            $data['allUsers'] = $userModel->where('status !=', 'inactive')->findAll();
+                // Get all users for management (excluding inactive users by default, or show all for admin overview)
+                $data['allUsers'] = $userModel->where('status !=', 'inactive')->findAll();
 
-            // Get all courses with teacher names for course management
-            $data['courses'] = $courseModel->select('courses.*, users.name as teacher_name')
-                ->join('users', 'users.id = courses.teacher_id', 'left')
-                ->findAll();
+                // Get all courses with teacher names for course management
+                if ($courseModel->db->fieldExists('teacher_id', 'courses')) {
+                    $data['courses'] = $courseModel->select('courses.*, users.name as teacher_name')
+                        ->join('users', 'users.id = courses.teacher_id', 'left')
+                        ->findAll();
+                } else {
+                    $data['courses'] = $courseModel->findAll();
+                    // Add empty teacher_name
+                    foreach ($data['courses'] as &$course) {
+                        $course['teacher_name'] = 'Unassigned';
+                    }
+                }
 
-            // Get all materials for admin
-            $data['allMaterials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
-                ->join('courses', 'courses.id = materials.course_id')
-                ->findAll();
-
-            // Get teachers for course assignment dropdown
-            $data['teachers'] = $userModel->where('role', 'teacher')->findAll();
-
-            // Count active courses
-            $data['widgets']['active_courses'] = $courseModel->where('status', 'active')->countAllResults();
-        } elseif ($role === 'teacher') {
-            $courseModel = new \App\Models\CourseModel();
-            $userId = $session->get('userId');
-
-            // Get teacher's courses - only show courses assigned to this teacher
-            $data['teacherCourses'] = $courseModel->where('teacher_id', $userId)->findAll();
-
-            // Get materials for teacher's courses
-            $courseIds = array_column($data['teacherCourses'], 'id');
-            if (!empty($courseIds)) {
-                $data['materials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
+                // Get all materials for admin
+                $data['allMaterials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
                     ->join('courses', 'courses.id = materials.course_id')
-                    ->whereIn('materials.course_id', $courseIds)
                     ->findAll();
-            } else {
-                $data['materials'] = [];
-            }
 
-            $data['widgets']['classes'] = count($data['teacherCourses']);
-            $data['widgets']['toGrade'] = 12; // Placeholder
-            $data['widgets']['announcements'] = 2; // Placeholder
-        } else { // student
-            $enrollmentModel = new \App\Models\EnrollmentModel();
-            $userId = $session->get('userId');
+                // Get teachers for course assignment dropdown
+                $data['teachers'] = $userModel->where('role', 'teacher')->findAll();
 
-            // Initialize variables
-            $enrolledCourses = [];
-            $data['materials'] = [];
+                // Count active courses
+                $data['widgets']['active_courses'] = $courseModel->where('status', 'active')->countAllResults();
+            } elseif ($role === 'teacher') {
+                $courseModel = new \App\Models\CourseModel();
+                $userId = $session->get('userId');
 
-            if ($userId) {
-                try {
-                    // Get enrolled courses
-                    $enrolledCourses = $enrollmentModel->getUserEnrollments($userId);
-                    if (!is_array($enrolledCourses)) {
-                        $enrolledCourses = [];
-                    }
+                // Get teacher's courses - only show courses assigned to this teacher
+                // Check if teacher_id column exists
+                if ($courseModel->db->fieldExists('teacher_id', 'courses')) {
+                    $data['teacherCourses'] = $courseModel->where('teacher_id', $userId)->findAll();
+                } else {
+                    // Temporary: no teacher courses until migration
+                    $data['teacherCourses'] = [];
+                }
 
-                    // Get materials for enrolled courses
-                    $courseIds = array_column($enrolledCourses, 'course_id');
-                    if (!empty($courseIds) && is_array($courseIds)) {
-                        try {
-                            $data['materials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
-                                ->join('courses', 'courses.id = materials.course_id')
-                                ->whereIn('materials.course_id', $courseIds)
-                                ->orderBy('materials.created_at', 'DESC')
-                                ->findAll();
-                            if (!is_array($data['materials'])) {
-                                $data['materials'] = [];
-                            }
-                        } catch (\Exception $e) {
-                            $data['materials'] = [];
-                        }
-                    }
-                } catch (\Exception $e) {
-                    $enrolledCourses = [];
+                // Get materials for teacher's courses
+                $courseIds = array_column($data['teacherCourses'], 'id');
+                if (!empty($courseIds)) {
+                    $data['materials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
+                        ->join('courses', 'courses.id = materials.course_id')
+                        ->whereIn('materials.course_id', $courseIds)
+                        ->findAll();
+                } else {
                     $data['materials'] = [];
                 }
+
+                $data['widgets']['classes'] = count($data['teacherCourses']);
+                $data['widgets']['toGrade'] = 12; // Placeholder
+                $data['widgets']['announcements'] = 2; // Placeholder
+            } else { // student
+                $enrollmentModel = new \App\Models\EnrollmentModel();
+                $courseModel = new \App\Models\CourseModel();
+                $userId = $session->get('userId');
+
+                // Initialize variables
+                $enrolledCourses = [];
+                $availableCourses = [];
+                $data['materials'] = [];
+
+                if ($userId) {
+                    try {
+                        // Get enrolled courses
+                        $enrolledCourses = $enrollmentModel->getUserEnrollments($userId);
+                        if (!is_array($enrolledCourses)) {
+                            $enrolledCourses = [];
+                        }
+
+                        // Get available courses for enrollment
+                        $availableCourses = $courseModel->getAvailableCourses($userId);
+                        if (!is_array($availableCourses)) {
+                            $availableCourses = [];
+                        }
+
+                        // Get materials for enrolled courses
+                        $courseIds = array_column($enrolledCourses, 'course_id');
+                        if (!empty($courseIds) && is_array($courseIds)) {
+                            try {
+                                $data['materials'] = $materialModel->select('materials.*, courses.course_name, courses.course_code')
+                                    ->join('courses', 'courses.id = materials.course_id')
+                                    ->whereIn('materials.course_id', $courseIds)
+                                    ->orderBy('materials.created_at', 'DESC')
+                                    ->findAll();
+                                if (!is_array($data['materials'])) {
+                                    $data['materials'] = [];
+                                }
+                            } catch (\Exception $e) {
+                                $data['materials'] = [];
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        $enrolledCourses = [];
+                        $availableCourses = [];
+                        $data['materials'] = [];
+                    }
+                }
+
+                // Set courses in data
+                $data['enrolledCourses'] = $enrolledCourses;
+                $data['availableCourses'] = $availableCourses;
+
+                $data['widgets']['courses'] = count($enrolledCourses);
+                $data['widgets']['assignments'] = 3; // Placeholder
+                $data['widgets']['announcements'] = 1; // Placeholder
+                $data['widgets']['available'] = count($availableCourses); // Available courses count
             }
-
-            // Set enrolled courses in data
-            $data['enrolledCourses'] = $enrolledCourses;
-
-            $data['widgets']['courses'] = count($enrolledCourses);
-            $data['widgets']['assignments'] = 3; // Placeholder
-            $data['widgets']['announcements'] = 1; // Placeholder
+        } catch (\Exception $e) {
+            log_message('error', 'Dashboard error: ' . $e->getMessage());
+            // Set default widgets to avoid errors
+            $data['widgets'] = array_merge($data['widgets'], [
+                'courses' => 0,
+                'users' => 0,
+                'classes' => 0,
+                'enrollments' => 0,
+                'students' => 0,
+                'teachers' => 0,
+                'admins' => 0,
+                'assignments' => 0,
+                'announcements' => 0,
+                'active_courses' => 0,
+                'toGrade' => 0,
+            ]);
+            $data['enrolledCourses'] = [];
+            $data['materials'] = [];
+            $data['allUsers'] = [];
+            $data['courses'] = [];
+            $data['allMaterials'] = [];
+            $data['teachers'] = [];
+            $data['teacherCourses'] = [];
         }
 
         return view('auth/dashboard', $data);
@@ -312,7 +367,11 @@ class Auth extends BaseController
         $courseModel = new \App\Models\CourseModel();
 
         // Get teacher's assigned courses
-        $teacherCourses = $courseModel->where('teacher_id', $userId)->findAll();
+        if ($courseModel->db->fieldExists('teacher_id', 'courses')) {
+            $teacherCourses = $courseModel->where('teacher_id', $userId)->findAll();
+        } else {
+            $teacherCourses = [];
+        }
 
         $data = [
             'teacherCourses' => $teacherCourses,
@@ -364,10 +423,10 @@ class Auth extends BaseController
                               ->where('role', 'student')
                               ->findAll();
 
-        // Add enrollment date to each student
+        // Add enrollment date to each student (if column exists)
         $enrollmentMap = [];
         foreach ($enrollments as $enrollment) {
-            $enrollmentMap[$enrollment['user_id']] = $enrollment['enrollment_date'];
+            $enrollmentMap[$enrollment['user_id']] = $enrollment['enrollment_date'] ?? 'N/A';
         }
 
         foreach ($students as &$student) {

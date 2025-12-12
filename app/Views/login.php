@@ -21,21 +21,22 @@
         <div class="card border-0 shadow-lg rounded-4">
             <div class="card-body p-4">
                 <form action="<?= site_url('login') ?>" method="post">
+                    <?= csrf_field() ?>
                     <div class="mb-3">
                         <label for="email" class="form-label fw-semibold">username</label>
-                        <input type="email" 
-                               class="form-control form-control-lg rounded-3" 
-                               id="email" 
-                               name="email" 
-                               required 
+                        <input type="email"
+                               class="form-control form-control-lg rounded-3"
+                               id="email"
+                               name="email"
+                               required
                                value="<?= esc(old('email')) ?>">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label fw-semibold">Password</label>
-                        <input type="password" 
-                               class="form-control form-control-lg rounded-3" 
-                               id="password" 
-                               name="password" 
+                        <input type="password"
+                               class="form-control form-control-lg rounded-3"
+                               id="password"
+                               name="password"
                                required>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 rounded-3 py-2">

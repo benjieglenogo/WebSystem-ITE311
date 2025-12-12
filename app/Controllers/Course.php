@@ -32,7 +32,8 @@ class Course extends BaseController
             ]);
         }
 
-        $user_id = session()->get('userId');
+        $user_id = (int) session()->get('userId');
+        $course_id = (int) $this->request->getPost('course_id');
         $enrollmentModel = new EnrollmentModel();
 
         // Check if user is already enrolled
