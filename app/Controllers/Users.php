@@ -118,6 +118,63 @@ class Users extends BaseController
     }
 
     /**
+     * Update user (name, role, and status)
+     */
+    public function update()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied.'])->setStatusCode(403);
+        }
+
+        $userId = (int) $this->request->getPost('user_id');
+        $name = trim($this->request->getPost('name'));
+        $role = $this->request->getPost('role');
+        $status = $this->request->getPost('status');
+
+        if (!$userId || empty($name) || !in_array($role, ['student', 'teacher', 'admin']) || !in_array($status, ['active', 'inactive'])) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid user data.'
+            ])->setStatusCode(400);
+        }
+
+        $user = $this->userModel->find($userId);
+        if (!$user) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'User not found.'
+            ])->setStatusCode(404);
+        }
+
+        // Prevent modifying protected admin
+        if ($user['is_protected'] == 1) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Cannot modify protected admin account.'
+            ])->setStatusCode(403);
+        }
+
+        $data = [
+            'name' => $name,
+            'role' => $role,
+            'status' => $status
+        ];
+
+        if ($this->userModel->update($userId, $data)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'User updated successfully.'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to update user.'
+        ])->setStatusCode(500);
+    }
+
+    /**
      * Update user role
      */
     public function updateRole()
@@ -167,7 +224,7 @@ class Users extends BaseController
     }
 
     /**
-     * Update user password (only for protected admin)
+     * Update user password
      */
     public function updatePassword()
     {
@@ -194,11 +251,11 @@ class Users extends BaseController
             ])->setStatusCode(404);
         }
 
-        // Only allow password change for protected admin (or if user is changing their own password)
-        if ($user['is_protected'] != 1 && $userId != $session->get('userId')) {
+        // Prevent changing password for protected admin accounts
+        if ($user['is_protected'] == 1) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'You can only change the password for the protected admin account.'
+                'message' => 'Cannot change password for protected admin account.'
             ])->setStatusCode(403);
         }
 

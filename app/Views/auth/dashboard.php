@@ -1,1491 +1,799 @@
 <?= $this->extend('templates/header') ?>
 
 <?= $this->section('content') ?>
-	<!-- Course Search Bar (added for dashboard) -->
-
-	<!-- Modern dashboard styles -->
+	<!-- Course Management Admin Dashboard -->
 	<style>
-		body {
-			background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		/* Professional Admin Dashboard Styles */
+		.dashboard-container {
+			background-color: #f8f9fa;
 			min-height: 100vh;
-			font-family: 'Segoe UI', sans-serif;
+			padding: 20px;
 		}
 
 		.dashboard-header {
-			display:flex;
-			justify-content:space-between;
-			align-items:center;
-			gap:12px;
-			margin-bottom:18px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
 		}
 
-		.stat-card {
-			background: rgba(255, 255, 255, 0.95);
-			backdrop-filter: blur(10px);
+		.dashboard-title {
+			color: #343a40;
+			font-weight: 600;
+		}
+
+		/* Summary Cards */
+		.summary-card {
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			padding: 20px;
+			margin-bottom: 20px;
+			border-left: 4px solid #007bff;
+		}
+
+		.summary-card h3 {
+			color: #495057;
+			font-size: 28px;
+			margin-bottom: 5px;
+		}
+
+		.summary-card p {
+			color: #6c757d;
+			font-size: 14px;
+			margin-bottom: 0;
+		}
+
+		/* Search Bar */
+		.search-container {
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			padding: 20px;
+			margin-bottom: 20px;
+		}
+
+		.search-input {
+			border-radius: 25px;
+			border: 1px solid #ced4da;
+			padding-left: 15px;
+		}
+
+		.search-btn {
+			border-radius: 25px;
+			background-color: #007bff;
 			border: none;
-			border-radius: 15px;
-			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-			transition: transform 0.3s ease, box-shadow 0.3s ease;
 		}
 
-		.stat-card:hover {
-			transform: translateY(-5px);
-			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+		/* Courses Table */
+		.courses-table {
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			padding: 20px;
 		}
 
-		.card {
-			background: rgba(255, 255, 255, 0.95);
-			backdrop-filter: blur(10px);
-			border: none;
-			border-radius: 15px;
-			box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+		.table {
+			margin-bottom: 0;
 		}
 
-		.course-card .card-body { min-height:120px; }
-		mark { background:#fffb91; padding:0 2px; }
-
-		/* Icon styling */
-		.stat-icon {
-			font-size: 2rem;
-			margin-bottom: 10px;
-			opacity: 0.8;
-		}
-
-		/* Welcome alert styling */
-		.alert-info {
-			background: rgba(255, 255, 255, 0.9);
-			border: none;
-			border-radius: 15px;
+		.table th {
+			background-color: #f8f9fa;
+			border-top: none;
+			font-weight: 500;
 			color: #495057;
 		}
 
-		/* Button enhancements */
-		.btn {
-			border-radius: 25px;
-			font-weight: 500;
-			transition: all 0.3s ease;
+		.table td {
+			vertical-align: middle;
 		}
 
-		.btn:hover {
-			transform: translateY(-2px);
+		.status-dropdown {
+			padding: 5px 10px;
+			border-radius: 5px;
+			border: 1px solid #ced4da;
 		}
 
-		/* Search bar styling */
-		.input-group .form-control {
-			border-radius: 25px 0 0 25px;
-			border: 2px solid rgba(255, 255, 255, 0.2);
-			background: rgba(255, 255, 255, 0.9);
+		.btn-edit {
+			background-color: #28a745;
+			color: white;
+			border: none;
+			border-radius: 5px;
+			padding: 5px 15px;
 		}
 
-		.input-group .btn {
-			border-radius: 0 25px 25px 0;
-			border: 2px solid rgba(255, 255, 255, 0.2);
+		/* Modal Styles */
+		.modal-content {
+			border-radius: 8px;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 		}
 
-		/* Table styling */
-		.table {
-			background: rgba(255, 255, 255, 0.9);
-			border-radius: 10px;
+		.modal-header {
+			background-color: #f8f9fa;
+			border-bottom: 1px solid #dee2e6;
+			border-radius: 8px 8px 0 0;
 		}
 
-		@media (max-width:767px){
-			.dashboard-header{flex-direction:column;align-items:flex-start}
-			body { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); }
+		.modal-footer {
+			border-top: 1px solid #dee2e6;
+		}
+
+		.form-control, .form-select {
+			border-radius: 5px;
+			border: 1px solid #ced4da;
+		}
+
+		/* Responsive Design */
+		@media (max-width: 768px) {
+			.dashboard-header {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.table-responsive {
+				overflow-x: auto;
+			}
+		}
+
+		/* Icon Animations and Visual Feedback */
+		.bi-bounce {
+			animation: bounce 0.3s ease;
+		}
+
+		@keyframes bounce {
+			0%, 100% { transform: scale(1); }
+			50% { transform: scale(1.2); }
+		}
+
+		/* Button hover effects for better icon visibility */
+		.btn-primary:hover i,
+		.btn-info:hover i,
+		.btn-success:hover i,
+		.btn-danger:hover i {
+			transform: scale(1.1);
+			transition: transform 0.2s ease;
+		}
+
+		/* Action button styling */
+		.btn-sm {
+			margin-right: 5px;
+		}
+
+		/* Tooltip styling */
+		.tooltip-inner {
+			max-width: 200px;
+			text-align: center;
 		}
 	</style>
-	<div class="row mb-4">
-		<div class="col-md-6">
-			<form id="searchForm" class="d-flex">
-				<div class="input-group">
-					<input type="text" id="searchInput" class="form-control" placeholder="Search courses..." name="search_term">
-					<button class="btn btn-outline-primary" type="submit">
-						<i class="bi bi-search"></i> Search
-					</button>
-				</div>
-			</form>
+
+	<div class="dashboard-container">
+		<div class="dashboard-header">
+			<h1 class="dashboard-title">Course Management Dashboard</h1>
 		</div>
+
+		<!-- Success/Error Messages -->
+		<?php if (session()->getFlashdata('success')): ?>
+			<div class="alert alert-success alert-dismissible fade show" role="alert">
+				<?= esc(session()->getFlashdata('success')) ?>
+				<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			</div>
+		<?php endif; ?>
+
+		<?php if (session()->getFlashdata('error')): ?>
+			<div class="alert alert-danger alert-dismissible fade show" role="alert">
+				<?= esc(session()->getFlashdata('error')) ?>
+				<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+			</div>
+		<?php endif; ?>
+
+		<?php
+			$roleFromSession = session('userRole');
+			$roleLocal = isset($role) ? $role : $roleFromSession;
+			if (!$roleLocal || !in_array($roleLocal, ['admin', 'teacher', 'student'])) {
+				$roleLocal = 'student';
+			}
+		?>
+
+        <?php if ($roleLocal === 'admin'): ?>
+            <!-- Admin Navigation with Enhanced Icons -->
+            <div class="mb-4">
+                <div class="btn-group" role="group" aria-label="Admin navigation">
+                    <a href="<?= base_url('dashboard') ?>" class="btn btn-primary" title="Manage Courses">
+                        <i class="bi bi-book-fill"></i> Course Management
+                    </a>
+                    <a href="<?= base_url('users/management') ?>" class="btn btn-info" title="Manage Users">
+                        <i class="bi bi-people-fill"></i> User Management
+                    </a>
+                    <a href="<?= base_url('announcements') ?>" class="btn btn-success" title="View Announcements">
+                        <i class="bi bi-megaphone-fill"></i> Announcements
+                    </a>
+                </div>
+            </div>
+
+            <!-- Summary Cards for Admin -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="summary-card">
+                        <p>Total Courses</p>
+                        <h3><?= isset($widgets['courses']) ? (int)$widgets['courses'] : 0 ?></h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="summary-card" style="border-left: 4px solid #28a745;">
+                        <p>Active Courses</p>
+                        <h3><?= isset($widgets['active_courses']) ? (int)$widgets['active_courses'] : 0 ?></h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="summary-card" style="border-left: 4px solid #6f42c1;">
+                        <p>Total Users</p>
+                        <h3><?= isset($widgets['users']) ? (int)$widgets['users'] : 0 ?></h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Course Management Table -->
+            <div class="courses-table">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="mb-0">Course Management</h3>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createCourseModal">
+                        <i class="bi bi-plus"></i> Create New Course
+                    </button>
+                </div>
+
+                <!-- Search Bar -->
+                <div class="search-container mb-3">
+                    <form id="courseSearchForm" class="d-flex">
+                        <input type="text" class="form-control search-input me-2" id="searchInput" placeholder="Search courses...">
+                        <button type="submit" class="btn btn-primary search-btn">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Title</th>
+                                <th>Teacher</th>
+                                <th>School Year</th>
+                                <th>Semester</th>
+                                <th>Schedule</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (isset($courses) && !empty($courses)): ?>
+                                <?php foreach ($courses as $course): ?>
+                                    <tr>
+                                        <td><?= esc($course['course_code'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['course_name'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['teacher_name'] ?? 'Unassigned') ?></td>
+                                        <td><?= esc($course['school_year'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['semester'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['schedule'] ?? 'N/A') ?></td>
+                                        <td>
+                                            <select class="status-dropdown" data-course-id="<?= esc($course['id'] ?? '') ?>">
+                                                <option value="active" <?= (($course['status'] ?? '') === 'active') ? 'selected' : '' ?>>Active</option>
+                                                <option value="inactive" <?= (($course['status'] ?? '') === 'inactive') ? 'selected' : '' ?>>Inactive</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-course-btn" data-course-id="<?= esc($course['id'] ?? '') ?>" title="Edit Course Details">
+                                                <i class="bi bi-pencil-fill"></i> Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-danger delete-course-btn" data-course-id="<?= esc($course['id'] ?? '') ?>" title="Delete Course Permanently">
+                                                <i class="bi bi-trash-fill"></i> Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">No courses found</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php elseif ($roleLocal === 'teacher'): ?>
+            <!-- Teacher Navigation -->
+            <div class="mb-4">
+                <div class="btn-group" role="group" aria-label="Teacher navigation">
+                    <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-primary">
+                        <i class="bi bi-book"></i> My Courses
+                    </a>
+                    <a href="<?= base_url('teacher/students') ?>" class="btn btn-outline-primary">
+                        <i class="bi bi-people"></i> Manage Students
+                    </a>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="summary-card">
+                        <p>Total Courses</p>
+                        <h3><?= isset($widgets['courses']) ? (int)$widgets['courses'] : 0 ?></h3>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="summary-card" style="border-left: 4px solid #28a745;">
+                        <p>Active Courses</p>
+                        <h3><?= isset($widgets['active_courses']) ? (int)$widgets['active_courses'] : 0 ?></h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher's Courses Table -->
+            <div class="courses-table">
+                <h3 class="mb-3">Your Courses</h3>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Course Code</th>
+                                <th>Course Title</th>
+                                <th>Description</th>
+                                <th>School Year</th>
+                                <th>Semester</th>
+                                <th>Schedule</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (isset($teacherCourses) && !empty($teacherCourses)): ?>
+                                <?php foreach ($teacherCourses as $course): ?>
+                                    <tr>
+                                        <td><?= esc($course['course_code'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['course_name'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['description'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['school_year'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['semester'] ?? 'N/A') ?></td>
+                                        <td><?= esc($course['schedule'] ?? 'N/A') ?></td>
+                                        <td>
+                                            <span class="badge <?= ($course['status'] ?? '') === 'active' ? 'bg-success' : 'bg-secondary' ?>">
+                                                <?= esc(ucfirst($course['status'] ?? 'N/A')) ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No courses assigned</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+		<?php else: ?>
+			<div class="alert alert-info">
+				You don't have permission to access the Course Management Dashboard.
+			</div>
+		<?php endif; ?>
 	</div>
-	<div id="coursesContainer" class="row mb-4"></div>
-	<div class="d-flex justify-content-between align-items-center mb-4">
-		<h1 class="mb-0 text-primary fw-bold">Dashboard</h1>
-		<a href="<?= base_url('logout') ?>" class="btn btn-outline-danger rounded-3 px-4">Logout</a>
-	</div>
 
-	<div class="alert alert-info shadow-sm rounded-3" role="alert">
-		Welcome, <strong><?= esc(isset($userName) ? $userName : session('userName')) ?></strong>!
-	</div>
-
-	<!-- Success/Error Messages -->
-	<?php if (session()->getFlashdata('success')): ?>
-		<div class="alert alert-success alert-dismissible fade show" role="alert">
-			<?= esc(session()->getFlashdata('success')) ?>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-		</div>
-	<?php endif; ?>
-
-	<?php if (session()->getFlashdata('error')): ?>
-		<div class="alert alert-danger alert-dismissible fade show" role="alert">
-			<?= esc(session()->getFlashdata('error')) ?>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-		</div>
-	<?php endif; ?>
-
-	<?php 
-		$roleFromSession = session('userRole'); 
-		$roleLocal = isset($role) ? $role : $roleFromSession; 
-		// Ensure we have a valid role
-		if (!$roleLocal || !in_array($roleLocal, ['admin', 'teacher', 'student'])) {
-			$roleLocal = 'student'; // Default fallback
-		}
-	?>
-
-	<?php if ($roleLocal === 'admin'): ?>
-		<!-- Admin Statistics Cards -->
-		<div class="row mb-4">
-			<div class="col-md-3 mb-3">
-				<div class="card stat-card h-100">
-					<div class="card-body p-4 text-center">
-						<i class="bi bi-people-fill stat-icon text-primary"></i>
-						<h6 class="text-muted mb-2">Total Users</h6>
-						<h2 class="mb-0 text-primary"><?= isset($widgets['users']) ? (int)$widgets['users'] : 0 ?></h2>
-					</div>
+	<!-- Create Course Modal -->
+	<div class="modal fade" id="createCourseModal" tabindex="-1" aria-labelledby="createCourseModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="createCourseModalLabel">Create New Course</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
-			</div>
-
-			<div class="col-md-3 mb-3">
-				<div class="card stat-card h-100">
-					<div class="card-body p-4 text-center">
-						<i class="bi bi-book-fill stat-icon text-info"></i>
-						<h6 class="text-muted mb-2">Total Courses</h6>
-						<h2 class="mb-0 text-info"><?= isset($widgets['courses']) ? (int)$widgets['courses'] : 0 ?></h2>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-md-3 mb-3">
-				<div class="card stat-card h-100">
-					<div class="card-body p-4 text-center">
-						<i class="bi bi-check-circle-fill stat-icon text-success"></i>
-						<h6 class="text-muted mb-2">Enrollments</h6>
-						<h2 class="mb-0 text-success"><?= isset($widgets['enrollments']) ? (int)$widgets['enrollments'] : 0 ?></h2>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-md-3 mb-3">
-				<div class="card stat-card h-100">
-					<div class="card-body p-4 text-center">
-						<i class="bi bi-activity stat-icon text-success"></i>
-						<h6 class="text-muted mb-2">System Status</h6>
-						<h6 class="mb-0 text-success">Active</h6>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- User Role Breakdown -->
-		<div class="row mb-4">
-			<div class="col-md-4 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<h6 class="text-muted mb-2">Students</h6>
-						<h3 class="mb-0 text-primary"><?= isset($widgets['students']) ? (int)$widgets['students'] : 0 ?></h3>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-md-4 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<h6 class="text-muted mb-2">Teachers</h6>
-						<h3 class="mb-0 text-info"><?= isset($widgets['teachers']) ? (int)$widgets['teachers'] : 0 ?></h3>
-					</div>
-				</div>
-			</div>
-
-			<div class="col-md-4 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<h6 class="text-muted mb-2">Administrators</h6>
-						<h3 class="mb-0 text-warning"><?= isset($widgets['admins']) ? (int)$widgets['admins'] : 0 ?></h3>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- User Management -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<div class="d-flex justify-content-between align-items-center mb-3">
-					<h5 class="fw-semibold mb-0">Manage Users</h5>
-					<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
-						<i class="bi bi-person-plus"></i> Add New User
-					</button>
-				</div>
-				
-				<?php if (isset($allUsers) && !empty($allUsers)): ?>
-					<div class="table-responsive">
-						<table class="table table-hover" id="usersTable">
-							<thead>
-								<tr>
-									<th>ID</th>
-									<th>Name</th>
-									<th>Email</th>
-									<th>Role</th>
-									<th>Status</th>
-									<th>Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($allUsers as $user): ?>
-									<?php 
-										$isProtected = isset($user['is_protected']) && $user['is_protected'] == 1;
-										$status = isset($user['status']) ? $user['status'] : 'active';
-									?>
-									<tr data-user-id="<?= esc($user['id']) ?>" data-protected="<?= $isProtected ? '1' : '0' ?>">
-										<td><?= esc($user['id'] ?? '') ?></td>
-										<td>
-											<?= esc($user['name'] ?? '') ?>
-											<?php if ($isProtected): ?>
-												<span class="badge bg-warning text-dark ms-1" title="Protected Admin Account">🔒</span>
-											<?php endif; ?>
-										</td>
-										<td><?= esc($user['email'] ?? '') ?></td>
-										<td>
-											<?php if ($isProtected): ?>
-												<span class="badge bg-warning text-dark"><?= esc($user['role'] ?? 'admin') ?></span>
-											<?php else: ?>
-												<select class="form-select form-select-sm role-select" data-user-id="<?= esc($user['id']) ?>" style="width: auto; display: inline-block;">
-													<option value="student" <?= ($user['role'] ?? '') === 'student' ? 'selected' : '' ?>>Student</option>
-													<option value="teacher" <?= ($user['role'] ?? '') === 'teacher' ? 'selected' : '' ?>>Teacher</option>
-													<option value="admin" <?= ($user['role'] ?? '') === 'admin' ? 'selected' : '' ?>>Admin</option>
-												</select>
-											<?php endif; ?>
-										</td>
-										<td>
-											<span class="badge bg-<?= $status === 'active' ? 'success' : 'secondary' ?>">
-												<?= ucfirst($status) ?>
-											</span>
-										</td>
-										<td>
-											<?php if ($isProtected): ?>
-												<button class="btn btn-sm btn-outline-info change-password-btn" data-user-id="<?= esc($user['id']) ?>" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-													Change Password
-												</button>
-											<?php else: ?>
-												<button class="btn btn-sm btn-outline-<?= $status === 'active' ? 'warning' : 'success' ?> toggle-status-btn" data-user-id="<?= esc($user['id']) ?>" data-status="<?= $status ?>">
-													<?= $status === 'active' ? 'Deactivate' : 'Activate' ?>
-												</button>
-												<button class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="<?= esc($user['id']) ?>">
-													Delete
-												</button>
-											<?php endif; ?>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-				<?php else: ?>
-					<div class="text-muted">No users found.</div>
-				<?php endif; ?>
-			</div>
-		</div>
-
-		<!-- Add User Modal -->
-		<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<form id="addUserForm" action="<?= base_url('users/create') ?>" method="post">
-						<?= csrf_field() ?>
-						<div class="modal-body">
-							<div class="mb-3">
-								<label for="userName" class="form-label">Full Name</label>
-								<input type="text" class="form-control" id="userName" name="name" required>
-								<div class="invalid-feedback"></div>
+				<form id="createCourseForm">
+					<?= csrf_field() ?>
+					<div class="modal-body">
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="createCourseCode" class="form-label">Course Code</label>
+								<input type="text" class="form-control" id="createCourseCode" name="course_code" required>
 							</div>
-							<div class="mb-3">
-								<label for="userEmail" class="form-label">Email/Username</label>
-								<input type="email" class="form-control" id="userEmail" name="email" required>
-								<div class="invalid-feedback"></div>
+							<div class="col-md-6">
+								<label for="createCourseTitle" class="form-label">Course Title</label>
+								<input type="text" class="form-control" id="createCourseTitle" name="course_title" required>
 							</div>
-							<div class="mb-3">
-								<label for="userPassword" class="form-label">Password</label>
-								<input type="password" class="form-control" id="userPassword" name="password" required>
-								<small class="form-text text-muted">Must contain uppercase, lowercase, number, and special character (min 8 characters)</small>
-								<div class="invalid-feedback"></div>
-							</div>
-							<div class="mb-3">
-								<label for="userRole" class="form-label">Role</label>
-								<select class="form-select" id="userRole" name="role" required>
-									<option value="">Select Role</option>
-									<option value="student">Student</option>
-									<option value="teacher">Teacher</option>
-									<option value="admin">Admin</option>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="createSchoolYear" class="form-label">School Year</label>
+								<select class="form-select" id="createSchoolYear" name="school_year" required>
+									<option value="">Select Year</option>
+									<option value="2023-2024">2023-2024</option>
+									<option value="2024-2025">2024-2025</option>
+									<option value="2025-2026">2025-2026</option>
 								</select>
-								<div class="invalid-feedback"></div>
+							</div>
+							<div class="col-md-6">
+								<label for="createSemester" class="form-label">Semester</label>
+								<select class="form-select" id="createSemester" name="semester" required>
+									<option value="">Select Semester</option>
+									<option value="1st Semester">1st Semester</option>
+									<option value="2nd Semester">2nd Semester</option>
+									<option value="Summer">Summer</option>
+								</select>
 							</div>
 						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-primary">Create User</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
 
-		<!-- Change Password Modal -->
-		<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<form id="changePasswordForm">
-						<input type="hidden" id="passwordUserId" name="user_id">
-						<?= csrf_field() ?>
-						<div class="modal-body">
-							<div class="mb-3">
-								<label for="newPassword" class="form-label">New Password</label>
-								<input type="password" class="form-control" id="newPassword" name="password" required>
-								<small class="form-text text-muted">Must contain uppercase, lowercase, number, and special character (min 8 characters)</small>
-								<div class="invalid-feedback"></div>
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="createStartDate" class="form-label">Start Date</label>
+								<input type="date" class="form-control" id="createStartDate" name="start_date" required>
+							</div>
+							<div class="col-md-6">
+								<label for="createEndDate" class="form-label">End Date</label>
+								<input type="date" class="form-control" id="createEndDate" name="end_date" required>
 							</div>
 						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-primary">Update Password</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
 
-		<!-- Forward Material Modal -->
-		<div class="modal fade" id="forwardMaterialModal" tabindex="-1" aria-labelledby="forwardMaterialModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="forwardMaterialModalLabel">Forward Material to Another Course</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					</div>
-					<form id="forwardMaterialForm">
-						<input type="hidden" id="forwardMaterialId" name="material_id">
-						<?= csrf_field() ?>
-						<div class="modal-body">
-							<div class="mb-3">
-								<label for="targetCourseId" class="form-label">Select Target Course</label>
-								<select class="form-select" id="targetCourseId" name="target_course_id" required>
-									<option value="">Choose a course...</option>
-									<?php if (isset($teacherCourses) && !empty($teacherCourses)): ?>
-										<?php foreach ($teacherCourses as $course): ?>
-											<option value="<?= esc($course['id']) ?>">
-												<?= esc($course['course_name'] ?? 'Unnamed Course') ?>
-												<?php if (isset($course['course_code'])): ?>
-													(<?= esc($course['course_code']) ?>)
-												<?php endif; ?>
-											</option>
+						<div class="mb-3">
+							<label for="createDescription" class="form-label">Description</label>
+							<textarea class="form-control" id="createDescription" name="description" rows="3" required></textarea>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="createTeacher" class="form-label">Teacher</label>
+								<select class="form-select" id="createTeacher" name="teacher_id" required>
+									<option value="">Select Teacher</option>
+									<?php if (isset($teachers) && !empty($teachers)): ?>
+										<?php foreach ($teachers as $teacher): ?>
+											<option value="<?= esc($teacher['id']) ?>"><?= esc($teacher['name']) ?></option>
 										<?php endforeach; ?>
-									<?php else: ?>
-										<option value="">No courses available</option>
 									<?php endif; ?>
 								</select>
-								<div class="invalid-feedback"></div>
+							</div>
+							<div class="col-md-6">
+								<label for="createSchedule" class="form-label">Schedule</label>
+								<select class="form-select" id="createSchedule" name="schedule" required>
+									<option value="">Select Schedule</option>
+									<option value="Monday-Wednesday">Monday-Wednesday</option>
+									<option value="Tuesday-Thursday">Tuesday-Thursday</option>
+									<option value="Friday-Saturday">Friday-Saturday</option>
+									<option value="Daily">Daily</option>
+								</select>
 							</div>
 						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-primary">Forward Material</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-
-
-		<!-- All Materials Management -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">All Course Materials</h5>
-				<?php if (isset($allMaterials) && !empty($allMaterials)): ?>
-					<div class="table-responsive">
-						<table class="table table-hover">
-							<thead>
-								<tr>
-									<th>Course</th>
-									<th>File Name</th>
-									<th>Uploaded</th>
-									<th>Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($allMaterials as $material): ?>
-									<tr>
-										<td><?= esc($material['course_name'] ?? 'N/A') ?></td>
-										<td><?= esc($material['file_name'] ?? 'N/A') ?></td>
-										<td><?= isset($material['created_at']) ? date('M d, Y', strtotime($material['created_at'])) : 'N/A' ?></td>
-										<td>
-											<a href="<?= base_url('materials/download/' . $material['id']) ?>" class="btn btn-sm btn-outline-primary">Download</a>
-											<a href="<?= base_url('materials/delete/' . $material['id']) ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this material?')">Delete</a>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
 					</div>
-				<?php else: ?>
-					<div class="text-muted">No materials uploaded yet.</div>
-				<?php endif; ?>
-			</div>
-		</div>
-
-		<!-- Quick Actions -->
-		<div class="card border-0 shadow-lg rounded-4 mb-3">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">Quick Actions</h5>
-				<div class="row">
-					<div class="col-md-3 mb-2">
-						<a href="#" class="btn btn-outline-primary w-100">Manage Users</a>
-					</div>
-					<div class="col-md-3 mb-2">
-						<a href="#" class="btn btn-outline-info w-100">System Settings</a>
-					</div>
-					<div class="col-md-3 mb-2">
-						<a href="#" class="btn btn-outline-success w-100">View Reports</a>
-					</div>
-					<div class="col-md-3 mb-2">
-						<a href="#" class="btn btn-outline-warning w-100">Backup Data</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	<?php elseif ($roleLocal === 'teacher'): ?>
-		<!-- Teacher Statistics -->
-		<div class="row mb-4">
-			<div class="col-md-4 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<h6 class="text-muted mb-2">My Classes</h6>
-						<h2 class="mb-0 text-primary"><?= isset($widgets['classes']) ? (int)$widgets['classes'] : 0 ?></h2>
-					</div>
-				</div>
-			</div>
-			<div class="col-md-4 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<h6 class="text-muted mb-2">To Grade</h6>
-						<h2 class="mb-0 text-warning"><?= isset($widgets['toGrade']) ? (int)$widgets['toGrade'] : 0 ?></h2>
-					</div>
-				</div>
-			</div>
-			<div class="col-md-4 mb-3">
-				<div class="card border-0 shadow-lg rounded-4 h-100">
-					<div class="card-body p-4">
-						<h6 class="text-muted mb-2">Announcements</h6>
-						<h2 class="mb-0 text-info"><?= isset($widgets['announcements']) ? (int)$widgets['announcements'] : 0 ?></h2>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Upload Material Section -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">Upload Course Material</h5>
-				<form action="<?= base_url('materials/upload') ?>" method="post" enctype="multipart/form-data">
-					<div class="row">
-						<div class="col-md-4 mb-3">
-							<label for="course_id" class="form-label">Select Course</label>
-							<select class="form-select" id="course_id" name="course_id" required>
-								<option value="">Choose a course...</option>
-								<?php if (isset($teacherCourses) && !empty($teacherCourses)): ?>
-									<?php foreach ($teacherCourses as $course): ?>
-										<option value="<?= esc($course['id']) ?>">
-											<?= esc($course['course_name'] ?? 'Unnamed Course') ?>
-											<?php if (isset($course['course_code'])): ?>
-												(<?= esc($course['course_code']) ?>)
-											<?php endif; ?>
-										</option>
-									<?php endforeach; ?>
-								<?php else: ?>
-									<option value="">No courses available</option>
-								<?php endif; ?>
-							</select>
-						</div>
-						<div class="col-md-6 mb-3">
-							<label for="material_file" class="form-label">Select File</label>
-							<input type="file" class="form-control" id="material_file" name="material_file" required>
-						</div>
-						<div class="col-md-2 mb-3 d-flex align-items-end">
-							<button type="submit" class="btn btn-primary w-100">Upload</button>
-						</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Create Course</button>
 					</div>
 				</form>
 			</div>
 		</div>
+	</div>
 
-		<!-- My Uploaded Materials -->
-		<div class="card border-0 shadow-lg rounded-4 mb-3">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">My Uploaded Materials</h5>
-				<?php if (isset($materials) && !empty($materials)): ?>
-					<div class="table-responsive">
-						<table class="table table-hover">
-							<thead>
-								<tr>
-									<th>Course</th>
-									<th>File Name</th>
-									<th>Uploaded</th>
-									<th>Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($materials as $material): ?>
-									<tr>
-										<td><?= esc($material['course_name'] ?? 'N/A') ?></td>
-										<td><?= esc($material['file_name'] ?? 'N/A') ?></td>
-										<td><?= isset($material['created_at']) ? date('M d, Y', strtotime($material['created_at'])) : 'N/A' ?></td>
-										<td>
-											<a href="<?= base_url('materials/download/' . $material['id']) ?>" class="btn btn-sm btn-outline-primary">Download</a>
-											<a href="<?= base_url('materials/delete/' . $material['id']) ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this material?')">Delete</a>
-											<button class="btn btn-sm btn-outline-info forward-material-btn" data-material-id="<?= esc($material['id']) ?>" data-bs-toggle="modal" data-bs-target="#forwardMaterialModal">Forward</button>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-				<?php else: ?>
-					<div class="text-muted">No materials uploaded yet.</div>
-				<?php endif; ?>
-			</div>
-		</div>
-	<?php elseif ($roleLocal === 'student'): ?>
-		<!-- Enrolled Courses Section -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">My Enrolled Courses</h5>
-				<?php
-				$enrolledCoursesForDisplay = isset($enrolledCourses) ? $enrolledCourses : [];
-				?>
-
-				<?php if (empty($enrolledCoursesForDisplay)): ?>
-					<div class="text-muted">You are not enrolled in any courses yet.</div>
-				<?php else: ?>
-					<div class="list-group">
-						<?php foreach ($enrolledCoursesForDisplay as $course): ?>
-							<div class="list-group-item d-flex justify-content-between align-items-center">
-								<div>
-									<h6 class="mb-1 fw-semibold"><?php echo esc($course['course_name'] ?? 'Unknown Course'); ?></h6>
-									<p class="mb-1 text-muted"><?php echo esc($course['description'] ?? 'No description available'); ?></p>
-									<?php if (isset($course['enrollment_date']) && !empty($course['enrollment_date'])): ?>
-										<small class="text-muted">Enrolled: <?php echo date('M d, Y', strtotime($course['enrollment_date'])); ?></small>
-									<?php endif; ?>
-								</div>
-								<span class="badge bg-success rounded-pill">Enrolled</span>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
-			</div>
-		</div>
-
-		<!-- Available Courses Section -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">Available Courses</h5>
-
-					<!-- Student Search -->
-					<div class="row mb-3">
-						<div class="col-md-6 mb-2">
-							<input type="text" id="student-client-search" class="form-control" placeholder="Filter available courses (client-side)...">
-						</div>
-						<div class="col-md-6 mb-2 d-flex">
-							<input type="text" id="student-server-search" class="form-control me-2" placeholder="Search courses on server (press Enter)">
-							<button id="student-server-search-btn" class="btn btn-outline-info me-2">Search</button>
-							<button id="student-server-clear-btn" class="btn btn-outline-secondary">Clear</button>
-						</div>
-					</div>
-
-					<div id="student-server-results" class="row mb-3" style="display:none;"></div>
-				<?php
-				try {
-					$enrollmentModel = new \App\Models\EnrollmentModel();
-					$user_id = session()->get('userId');
-					$availableCourses = $user_id ? $enrollmentModel->getAvailableCourses($user_id) : [];
-				} catch (\Exception $e) {
-					$availableCourses = [];
-				}
-				?>
-
-				<?php if (empty($availableCourses)): ?>
-					<div class="text-muted">No courses available for enrollment.</div>
-				<?php else: ?>
-					<div class="row available-courses-container">
-						<?php foreach ($availableCourses as $course): ?>
-							<div class="col-md-6 mb-3" data-course-id="<?= esc($course['id'] ?? '') ?>">
-								<div class="card h-100 border-0 shadow-sm">
-									<div class="card-body">
-										<h6 class="card-title fw-semibold"><?php echo esc($course['course_name'] ?? 'Unknown Course'); ?></h6>
-										<p class="card-text text-muted"><?php echo esc($course['description'] ?? 'No description available'); ?></p>
-										<?php
-										$isEnrolled = false;
-										if ($user_id && isset($course['id'])) {
-											try {
-												$isEnrolled = $enrollmentModel->isAlreadyEnrolled($user_id, $course['id']);
-											} catch (\Exception $e) {
-												$isEnrolled = false;
-											}
-										}
-										?>
-										<button class="btn btn-primary enroll-btn"
-												data-course-id="<?php echo esc($course['id'] ?? ''); ?>"
-												<?php echo $isEnrolled ? 'disabled' : ''; ?>>
-											<?php echo $isEnrolled ? 'Already Enrolled' : 'Enroll'; ?>
-										</button>
-									</div>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
-			</div>
-		</div>
-
-		<!-- Course Materials Section -->
-		<div class="card border-0 shadow-lg rounded-4 mb-4">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">Course Materials</h5>
-				<?php 
-				$materialsForDisplay = isset($materials) ? $materials : [];
-				if (!empty($materialsForDisplay)): ?>
-					<div class="table-responsive">
-						<table class="table table-hover">
-							<thead>
-								<tr>
-									<th>Course</th>
-									<th>File Name</th>
-									<th>Uploaded</th>
-									<th>Actions</th>
-								</tr>
-							</thead>
-							<tbody>
-								<?php foreach ($materialsForDisplay as $material): ?>
-									<tr>
-										<td><?= esc($material['course_name'] ?? 'N/A') ?></td>
-										<td><?= esc($material['file_name'] ?? 'N/A') ?></td>
-										<td>
-											<?php 
-											if (isset($material['created_at']) && !empty($material['created_at'])) {
-												try {
-													echo date('M d, Y', strtotime($material['created_at']));
-												} catch (\Exception $e) {
-													echo 'N/A';
-												}
-											} else {
-												echo 'N/A';
-											}
-											?>
-										</td>
-										<td>
-											<?php if (isset($material['id'])): ?>
-												<a href="<?= base_url('materials/download/' . $material['id']) ?>" class="btn btn-sm btn-primary">Download</a>
-											<?php else: ?>
-												<span class="text-muted">N/A</span>
-											<?php endif; ?>
-										</td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-				<?php else: ?>
-					<div class="text-muted">
-						<?php 
-						$studentEnrolledCourses = isset($enrolledCoursesForDisplay) ? $enrolledCoursesForDisplay : [];
-						if (empty($studentEnrolledCourses)): ?>
-							You need to enroll in courses to access materials.
-						<?php else: ?>
-							No materials available for your enrolled courses yet.
-						<?php endif; ?>
-					</div>
-				<?php endif; ?>
-			</div>
-		</div>
-
-		<!-- Student Stats -->
-		<div class="card border-0 shadow-lg rounded-4 mb-3">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">My Progress</h5>
-				<div class="row text-center">
-					<div class="col-md-4">
-						<h3 class="text-primary mb-2"><?php echo isset($enrolledCoursesForDisplay) ? count($enrolledCoursesForDisplay) : 0; ?></h3>
-						<p class="mb-0">Enrolled Courses</p>
-					</div>
-					<div class="col-md-4">
-						<h3 class="text-info mb-2"><?php echo isset($widgets['assignments']) ? (int)$widgets['assignments'] : 0; ?></h3>
-						<p class="mb-0">Assignments</p>
-					</div>
-					<div class="col-md-4">
-						<h3 class="text-warning mb-2"><?php echo isset($widgets['announcements']) ? (int)$widgets['announcements'] : 0; ?></h3>
-						<p class="mb-0">Announcements</p>
-					</div>
+	<!-- Edit Course Modal -->
+	<div class="modal fade" id="editCourseModal" tabindex="-1" aria-labelledby="editCourseModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="editCourseModalLabel">Edit Course Details</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
-			</div>
-		</div>
-	<?php else: ?>
-		<div class="card border-0 shadow-lg rounded-4 mb-3">
-			<div class="card-body p-4">
-				<h5 class="fw-semibold mb-3">General</h5>
-				<p class="mb-0">Your role is not set. Please contact an administrator.</p>
-			</div>
-		</div>
-	<?php endif; ?>
-<?= $this->endSection() ?>
-<!-- Search Results Modal -->
-<div class="modal fade" id="searchResultsModal" tabindex="-1" aria-labelledby="searchResultsModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg modal-dialog-scrollable">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h5 class="modal-title" id="searchResultsModalLabel">Search Results</h5>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div>
-			<div class="modal-body" id="searchResultsModalBody">
-				<!-- Results inserted here -->
-			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<form id="editCourseForm">
+					<input type="hidden" id="editCourseId" name="course_id">
+					<?= csrf_field() ?>
+					<div class="modal-body">
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="editCourseCode" class="form-label">Course Code</label>
+								<input type="text" class="form-control" id="editCourseCode" name="course_code" readonly>
+							</div>
+							<div class="col-md-6">
+								<label for="editCourseTitle" class="form-label">Course Title</label>
+								<input type="text" class="form-control" id="editCourseTitle" name="course_title" required>
+							</div>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="editSchoolYear" class="form-label">School Year</label>
+								<select class="form-select" id="editSchoolYear" name="school_year" required>
+									<option value="">Select Year</option>
+									<option value="2023-2024">2023-2024</option>
+									<option value="2024-2025">2024-2025</option>
+									<option value="2025-2026">2025-2026</option>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label for="editSemester" class="form-label">Semester</label>
+								<select class="form-select" id="editSemester" name="semester" required>
+									<option value="">Select Semester</option>
+									<option value="1st Semester">1st Semester</option>
+									<option value="2nd Semester">2nd Semester</option>
+									<option value="Summer">Summer</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="editStartDate" class="form-label">Start Date</label>
+								<input type="date" class="form-control" id="editStartDate" name="start_date" required>
+							</div>
+							<div class="col-md-6">
+								<label for="editEndDate" class="form-label">End Date</label>
+								<input type="date" class="form-control" id="editEndDate" name="end_date" required>
+							</div>
+						</div>
+
+						<div class="mb-3">
+							<label for="editDescription" class="form-label">Description</label>
+							<textarea class="form-control" id="editDescription" name="description" rows="3" required></textarea>
+						</div>
+
+						<div class="row mb-3">
+							<div class="col-md-6">
+								<label for="editTeacher" class="form-label">Teacher</label>
+								<select class="form-select" id="editTeacher" name="teacher_id" required>
+									<option value="">Select Teacher</option>
+									<?php if (isset($teachers) && !empty($teachers)): ?>
+										<?php foreach ($teachers as $teacher): ?>
+											<option value="<?= esc($teacher['id']) ?>"><?= esc($teacher['name']) ?></option>
+										<?php endforeach; ?>
+									<?php endif; ?>
+								</select>
+							</div>
+							<div class="col-md-6">
+								<label for="editSchedule" class="form-label">Schedule</label>
+								<select class="form-select" id="editSchedule" name="schedule" required>
+									<option value="">Select Schedule</option>
+									<option value="Monday-Wednesday">Monday-Wednesday</option>
+									<option value="Tuesday-Thursday">Tuesday-Thursday</option>
+									<option value="Friday-Saturday">Friday-Saturday</option>
+									<option value="Daily">Daily</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+						<button type="submit" class="btn btn-primary">Update Course</button>
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
-</div>
-
+<?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
-// Client-side filtering and AJAX server-side search for courses
-$(function(){
-	// Helper to render server results into a container
-	function renderServerResults(container, courses){
-		container.empty();
-		if (!courses || courses.length === 0) {
-			container.html('<div class="text-muted">No courses found.</div>').show();
-			return;
-		}
-
-		courses.forEach(function(course){
-			var card = `
-				<div class="col-md-6 mb-3">
-					<div class="card h-100 border-0 shadow-sm">
-						<div class="card-body">
-							<h6 class="card-title fw-semibold">${escapeHtml(course.course_name || 'Unnamed Course')}</h6>
-							<p class="card-text text-muted">${escapeHtml(course.description || 'No description available')}</p>
-							<button class="btn btn-primary enroll-btn" data-course-id="${course.id}">Enroll</button>
-						</div>
-					</div>
-				</div>
-			`;
-			container.append(card);
-		});
-
-		container.show();
-	}
-
-	// Escape HTML helper
-	function escapeHtml(text) {
-		if (!text) return '';
-		return String(text).replace(/[&<>"']/g, function(m){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]; });
-	}
-
-	// Debounce helper
-	function debounce(fn, wait) {
-		var t;
-		return function() {
-			var args = arguments, ctx = this;
-			clearTimeout(t);
-			t = setTimeout(function(){ fn.apply(ctx, args); }, wait || 200);
-		};
-	}
-
-	// Escape RegExp for highlighting
-	function escapeRegExp(s) {
-		return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-	}
-
-	// Store original texts (used for restoring after highlight)
-	function storeOriginalText($card){
-		var $title = $card.find('.card-title');
-		var $desc = $card.find('.card-text');
-		if ($title.length && !$title.attr('data-orig')) $title.attr('data-orig', $title.text());
-		if ($desc.length && !$desc.attr('data-orig')) $desc.attr('data-orig', $desc.text());
-	}
-
-	function highlightTextInElement($el, q){
-		if (!$el || !$el.length) return;
-		var orig = $el.attr('data-orig') || $el.text();
-		if (!q) { $el.html(orig); return; }
-		var reg = new RegExp('(' + escapeRegExp(q) + ')', 'ig');
-		var highlighted = orig.replace(reg, '<mark>$1</mark>');
-		$el.html(highlighted);
-	}
-
-	function resetHighlight($el){
-		if (!$el || !$el.length) return;
-		if ($el.attr('data-orig')) $el.html($el.attr('data-orig'));
-		else $el.find('mark').each(function(){ $(this).replaceWith($(this).text()); });
-	}
-
-	function highlightCard($card, q){
-		if (!q) { resetHighlight($card.find('.card-title')); resetHighlight($card.find('.card-text')); return; }
-		storeOriginalText($card);
-		highlightTextInElement($card.find('.card-title'), q);
-		highlightTextInElement($card.find('.card-text'), q);
-	}
-
-	// CLIENT-SIDE: admin filter (debounced + highlight)
-	$('#admin-client-search').on('input', debounce(function(){
-		var q = $.trim($(this).val()).toLowerCase();
-		if (window.console && console.log) console.log('[SEARCH DEBUG] admin input:', q);
-		var $cards = $('.admin-courses-container').find('[data-course-id]');
-		if (!q) { $cards.show(); $cards.each(function(){ resetHighlight($(this).find('.card-title')); resetHighlight($(this).find('.card-text')); }); return; }
-		$cards.each(function(){
-			var $c = $(this);
-			var title = ($c.find('.card-title').text() || '').toLowerCase();
-			var desc = ($c.find('.card-text').text() || '').toLowerCase();
-			var text = (title + ' ' + desc).toLowerCase();
-			var match = text.indexOf(q) !== -1;
-			$c.toggle(match);
-			if (match) { highlightCard($c, q); }
-			else { resetHighlight($c.find('.card-title')); resetHighlight($c.find('.card-text')); }
-		});
-		if (window.console && console.log) console.log('[SEARCH DEBUG] admin matches:', $('.admin-courses-container').find('[data-course-id]:visible').length);
-		updateDebugPanel();
-	}, 200));
-
-	// CLIENT-SIDE: student filter for available courses (debounced + highlight)
-	$('#student-client-search').on('input', debounce(function(){
-		var q = $.trim($(this).val()).toLowerCase();
-		if (window.console && console.log) console.log('[SEARCH DEBUG] student input:', q);
-		var $cards = $('.available-courses-container').find('[data-course-id]');
-		if (!q) { $cards.show(); $cards.each(function(){ resetHighlight($(this).find('.card-title')); resetHighlight($(this).find('.card-text')); }); return; }
-		$cards.each(function(){
-			var $c = $(this);
-			var title = ($c.find('.card-title').text() || '').toLowerCase();
-			var desc = ($c.find('.card-text').text() || '').toLowerCase();
-			var text = (title + ' ' + desc).toLowerCase();
-			var match = text.indexOf(q) !== -1;
-			$c.toggle(match);
-			if (match) highlightCard($c, q);
-			else { resetHighlight($c.find('.card-title')); resetHighlight($c.find('.card-text')); }
-		});
-		if (window.console && console.log) console.log('[SEARCH DEBUG] student matches:', $('.available-courses-container').find('[data-course-id]:visible').length);
-		updateDebugPanel();
-	}, 200));
-
-	// SERVER-SIDE AJAX search (shared function)
-	function doServerSearch(query, resultContainer, showModal){
-		if (!query || query.trim() === ''){
-			if (resultContainer) resultContainer.hide();
-			return;
-		}
-
-		$.get('<?= base_url('course/search') ?>', { q: query })
-			.done(function(resp){
-				if (resp && resp.success){
-					var data = resp.data || [];
-					if (showModal) {
-						// Hide original containers so only modal is visible
-						$('.admin-courses-container').find('[data-course-id]').hide();
-						$('.available-courses-container').find('[data-course-id]').hide();
-						// Render into modal
-						var body = $('#searchResultsModalBody');
-						body.empty();
-						if (data.length === 0) {
-							body.html('<div class="text-muted">No courses found.</div>');
-						} else {
-							var row = $('<div class="row"></div>');
-							data.forEach(function(course){
-								var card = `
-									<div class="col-md-6 mb-3" data-course-id="${escapeHtml(String(course.id))}">
-										<div class="card h-100 border-0 shadow-sm">
-											<div class="card-body">
-												<h6 class="card-title fw-semibold">${escapeHtml(course.course_name || 'Unnamed Course')}</h6>
-												<p class="card-text text-muted">${escapeHtml(course.description || 'No description available')}</p>
-												<button class="btn btn-primary enroll-btn" data-course-id="${escapeHtml(String(course.id))}">Enroll</button>
-											</div>
-										</div>
-									</div>
-								`;
-								row.append(card);
-							});
-								body.append(row);
-								// Highlight matches in modal results
-								var q = String(query || '').trim();
-								if (q) {
-									body.find('[data-course-id]').each(function(){
-										highlightCard($(this), q.toLowerCase());
-									});
-								}
-						}
-						var modalEl = document.getElementById('searchResultsModal');
-						var modal = new bootstrap.Modal(modalEl);
-						modal.show();
-					} else if (resultContainer) {
-						// Use returned IDs to show/hide original cards and append new ones
-						var resultIds = data.map(function(c){ return String(c.id); });
-
-						// Hide all original cards first
-						if (resultContainer.attr('id') === 'admin-server-results') {
-							$('.admin-courses-container').find('[data-course-id]').hide();
-						} else if (resultContainer.attr('id') === 'student-server-results') {
-							$('.available-courses-container').find('[data-course-id]').hide();
-						}
-
-						// For each returned course, show existing card if present, otherwise render into results container
-						resultContainer.empty();
-						if (data.length === 0) {
-							resultContainer.html('<div class="text-muted">No courses found.</div>').show();
-						} else {
-							data.forEach(function(course){
-								var idStr = String(course.id);
-								var existing = $('[data-course-id="' + idStr + '"]');
-								if (existing.length) {
-									existing.show();
-								} else {
-									// render new card into result container
-									var card = `
-										<div class="col-md-6 mb-3" data-course-id="${escapeHtml(idStr)}">
-											<div class="card h-100 border-0 shadow-sm">
-												<div class="card-body">
-													<h6 class="card-title fw-semibold">${escapeHtml(course.course_name || 'Unnamed Course')}</h6>
-													<p class="card-text text-muted">${escapeHtml(course.description || 'No description available')}</p>
-													<button class="btn btn-primary enroll-btn" data-course-id="${escapeHtml(idStr)}">Enroll</button>
-												</div>
-											</div>
-										</div>
-									`;
-									resultContainer.append(card);
-									// highlight freshly appended card
-									if (query && String(query || '').trim()) {
-										highlightCard(resultContainer.find('[data-course-id="' + idStr + '"]'), String(query).trim().toLowerCase());
-									}
-								}
-							});
-							resultContainer.show();
-						}
-					}
-				} else {
-					if (resultContainer) resultContainer.html('<div class="text-muted">Search failed.</div>').show();
-					else $('#searchResultsModalBody').html('<div class="text-muted">Search failed.</div>');
-				}
-			})
-			.fail(function(){
-				if (resultContainer) resultContainer.html('<div class="text-muted">An error occurred while searching.</div>').show();
-				else $('#searchResultsModalBody').html('<div class="text-muted">An error occurred while searching.</div>');
-			});
-	}
-
-	// Admin server search events (modal results)
-	$('#admin-server-search-btn').on('click', function(){
-		var q = $('#admin-server-search').val();
-		doServerSearch(q, $('#admin-server-results'), true);
-	});
-	$('#admin-server-search').on('keyup', function(e){ if (e.key === 'Enter') { $('#admin-server-search-btn').click(); } });
-	$('#admin-server-clear-btn').on('click', function(){
-		$('#admin-server-search').val('');
-		$('#admin-server-results').hide().empty();
-		// Hide/clear modal if open
-		try { var m = bootstrap.Modal.getInstance(document.getElementById('searchResultsModal')); if (m) m.hide(); } catch(e){}
-		$('.admin-courses-container').show().find('[data-course-id]').show();
-	});
-
-	// Student server search events (modal results)
-	$('#student-server-search-btn').on('click', function(){
-		var q = $('#student-server-search').val();
-		doServerSearch(q, $('#student-server-results'), true);
-	});
-	$('#student-server-search').on('keyup', function(e){ if (e.key === 'Enter') { $('#student-server-search-btn').click(); } });
-	$('#student-server-clear-btn').on('click', function(){
-		$('#student-server-search').val('');
-		$('#student-server-results').hide().empty();
-		try { var m2 = bootstrap.Modal.getInstance(document.getElementById('searchResultsModal')); if (m2) m2.hide(); } catch(e){}
-		$('.available-courses-container').show().find('[data-course-id]').show();
-	});
-
-	// Delegated enroll handler for dynamically added enroll buttons (works for server results)
-	$(document).on('click', '.enroll-btn', function(e){
-		e.preventDefault();
-		var btn = $(this);
-		var courseId = btn.data('course-id');
-		if (!courseId) return;
-		if (btn.data('processing')) return;
-		var originalText = btn.text();
-		btn.data('processing', true).prop('disabled', true).text('Enrolling...');
-
-		$.post('<?= base_url('course/enroll') ?>', { course_id: courseId })
-			.done(function(response){
-				if (response && response.success){
-					btn.removeClass('btn-primary').addClass('btn-success').text('Enrolled').prop('disabled', true);
-				} else {
-					alert(response.message || 'Failed to enroll.');
-					btn.prop('disabled', false).text(originalText);
-				}
-			})
-			.fail(function(){
-				alert('An error occurred enrolling in the course.');
-				btn.prop('disabled', false).text(originalText);
-			})
-			.always(function(){ btn.data('processing', false); });
-	});
-
-	// Debug panel: update function and toggle handlers
-	function updateDebugPanel(){
-		var adminQ = $.trim($('#admin-client-search').val() || '');
-		var adminCount = $('.admin-courses-container').find('[data-course-id]:visible').length;
-		var studentQ = $.trim($('#student-client-search').val() || '');
-		var studentCount = $('.available-courses-container').find('[data-course-id]:visible').length;
-		$('#dbg-admin-q').text(adminQ || '(none)');
-		$('#dbg-admin-count').text(adminCount);
-		$('#dbg-student-q').text(studentQ || '(none)');
-		$('#dbg-student-count').text(studentCount);
-		$('#dbg-last-log').text('Last update: ' + new Date().toLocaleTimeString());
-		// ensure panel visible when there are actions
-		$('#search-debug-panel').show();
-	}
-
-	$('#search-debug-toggle').on('click', function(){ updateDebugPanel(); });
-	$('#search-debug-close').on('click', function(){ $('#search-debug-panel').hide(); });
-
-    // Initialize debug panel visibility if running locally
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        $('#search-debug-panel').show();
-        updateDebugPanel();
-    }
-
-    // ==================== USER MANAGEMENT FUNCTIONS ====================
-
-    var csrfName = '<?= csrf_token() ?>';
-
-    // Helper function to show alerts
-    function showUserAlert(message, type) {
-        var alertHtml = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
-                        message +
-                        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
-                        '</div>';
-        $('.container').prepend(alertHtml);
-        setTimeout(function() {
-            $('.alert').first().fadeOut(function() { $(this).remove(); });
-        }, 5000);
-    }
-
-    // Add User Form Submission
-    $('#addUserForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var submitBtn = form.find('button[type="submit"]');
-        var originalText = submitBtn.text();
-
-        submitBtn.prop('disabled', true).text('Creating...');
-
-        // Clear previous validation errors
-        form.find('.is-invalid').removeClass('is-invalid');
-        form.find('.invalid-feedback').text('');
-
-        $.ajax({
-            url: '<?= base_url('users/create') ?>',
-            type: 'POST',
-            data: form.serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    // Dynamically add the new user to the table instead of reloading
-                    var newRow = `
-                        <tr data-user-id="${response.user_id}" data-protected="0">
-                            <td>${response.user_id}</td>
-                            <td>${escapeHtml(form.find('[name="name"]').val())}</td>
-                            <td>${escapeHtml(form.find('[name="email"]').val())}</td>
-                            <td>
-                                <select class="form-select form-select-sm role-select" data-user-id="${response.user_id}" style="width: auto; display: inline-block;">
-                                    <option value="student" ${form.find('[name="role"]').val() === 'student' ? 'selected' : ''}>Student</option>
-                                    <option value="teacher" ${form.find('[name="role"]').val() === 'teacher' ? 'selected' : ''}>Teacher</option>
-                                    <option value="admin" ${form.find('[name="role"]').val() === 'admin' ? 'selected' : ''}>Admin</option>
-                                </select>
-                            </td>
-                            <td>
-                                <span class="badge bg-success">Active</span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-warning toggle-status-btn" data-user-id="${response.user_id}" data-status="active">
-                                    Deactivate
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger delete-user-btn" data-user-id="${response.user_id}">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    $('#usersTable tbody').append(newRow);
-
-                    // Update the total users count
-                    var currentCount = parseInt($('.stat-card .text-primary').first().text()) || 0;
-                    $('.stat-card .text-primary').first().text(currentCount + 1);
-
-                    // Update role-specific counts
-                    var userRole = form.find('[name="role"]').val();
-                    if (userRole === 'student') {
-                        var studentCount = parseInt($('.col-md-4 .text-primary').first().text()) || 0;
-                        $('.col-md-4 .text-primary').first().text(studentCount + 1);
-                    } else if (userRole === 'teacher') {
-                        var teacherCount = parseInt($('.col-md-4 .text-info').first().text()) || 0;
-                        $('.col-md-4 .text-info').first().text(teacherCount + 1);
-                    } else if (userRole === 'admin') {
-                        var adminCount = parseInt($('.col-md-4 .text-warning').first().text()) || 0;
-                        $('.col-md-4 .text-warning').first().text(adminCount + 1);
-                    }
-
-                    showUserAlert(response.message, 'success');
-                    $('#addUserModal').modal('hide');
-                    form[0].reset();
-                    // Refresh the page to ensure all server-side data is updated
-                    location.reload();
-                } else {
-                    showUserAlert(response.message || 'Failed to create user.', 'danger');
-                    if (response.errors) {
-                        $.each(response.errors, function(field, error) {
-                            var input = form.find('[name="' + field + '"]');
-                            input.addClass('is-invalid');
-                            input.siblings('.invalid-feedback').text(error);
-                        });
-                    }
-                }
-            },
-            error: function(xhr) {
-                var message = 'An error occurred while creating the user.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                showUserAlert(message, 'danger');
-            },
-            complete: function() {
-                submitBtn.prop('disabled', false).text(originalText);
-            }
-        });
-    });
-    });
-
-    // Role Change Handler
-    $(document).on('change', '.role-select', function() {
-        var select = $(this);
-        var userId = select.data('user-id');
-        var newRole = select.val();
-        var originalValue = select.val() === newRole ? select.data('original-role') : select.val();
-
-        // Store original if not set
-        if (!select.data('original-role')) {
-            select.data('original-role', originalValue);
-        } else {
-            originalValue = select.data('original-role');
-        }
-
-        if (!confirm('Are you sure you want to change this user\'s role to ' + newRole + '?')) {
-            select.val(originalValue);
-            return;
-        }
-
-        select.prop('disabled', true);
-
-        var csrfToken = $('input[name="' + csrfName + '"]').val();
-
-        $.ajax({
-            url: '<?= base_url('users/updateRole') ?>',
-            type: 'POST',
-            data: {
-                user_id: userId,
-                role: newRole,
-                [csrfName]: csrfToken
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showUserAlert(response.message, 'success');
-                    select.data('original-role', newRole);
-                    csrfToken = $('input[name="' + csrfName + '"]').val(); // Update CSRF token
-                } else {
-                    showUserAlert(response.message || 'Failed to update role.', 'danger');
-                    select.val(originalValue);
-                }
-            },
-            error: function(xhr) {
-                var message = 'An error occurred while updating the role.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                showUserAlert(message, 'danger');
-                select.val(originalValue);
-            },
-            complete: function() {
-                select.prop('disabled', false);
-            }
-        });
-    });
-
-    // Toggle Status (Activate/Deactivate)
-    $(document).on('click', '.toggle-status-btn', function() {
-        var btn = $(this);
-        var userId = btn.data('user-id');
-        var currentStatus = btn.data('status');
-        var action = currentStatus === 'active' ? 'deactivate' : 'activate';
-
-        if (!confirm('Are you sure you want to ' + action + ' this user?')) {
-            return;
-        }
-
-        btn.prop('disabled', true);
-
-        var csrfToken = $('input[name="' + csrfName + '"]').val();
-
-        $.ajax({
-            url: '<?= base_url('users/toggleStatus') ?>',
-            type: 'POST',
-            data: {
-                user_id: userId,
-                [csrfName]: csrfToken
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showUserAlert(response.message, 'success');
-                    // Update UI
-                    var row = btn.closest('tr');
-                    var statusBadge = row.find('td:nth-child(5) .badge');
-                    var newStatus = response.status;
-                    
-                    statusBadge.removeClass('bg-success bg-secondary')
-                               .addClass(newStatus === 'active' ? 'bg-success' : 'bg-secondary')
-                               .text(newStatus.charAt(0).toUpperCase() + newStatus.slice(1));
-                    
-                    btn.removeClass('btn-outline-warning btn-outline-success')
-                       .addClass(newStatus === 'active' ? 'btn-outline-warning' : 'btn-outline-success')
-                       .text(newStatus === 'active' ? 'Deactivate' : 'Activate')
-                       .data('status', newStatus);
-                } else {
-                    showUserAlert(response.message || 'Failed to update status.', 'danger');
-                }
-            },
-            error: function(xhr) {
-                var message = 'An error occurred while updating the status.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                showUserAlert(message, 'danger');
-            },
-            complete: function() {
-                btn.prop('disabled', false);
-            }
-        });
-    });
-
-    // Delete User Handler
-    $(document).on('click', '.delete-user-btn', function() {
-        var btn = $(this);
-        var userId = btn.data('user-id');
-
-        if (!confirm('Are you sure you want to deactivate this user? The account will be marked as inactive but not deleted from the database.')) {
-            return;
-        }
-
-        btn.prop('disabled', true);
-
-        var csrfToken = $('input[name="' + csrfName + '"]').val();
-
-        $.ajax({
-            url: '<?= base_url('users/delete') ?>',
-            type: 'POST',
-            data: {
-                user_id: userId,
-                [csrfName]: csrfToken
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showUserAlert(response.message, 'success');
-                    // Update UI to show inactive status
-                    var row = btn.closest('tr');
-                    var statusBadge = row.find('td:nth-child(5) .badge');
-                    var toggleBtn = row.find('.toggle-status-btn');
-                    
-                    statusBadge.removeClass('bg-success').addClass('bg-secondary').text('Inactive');
-                    toggleBtn.removeClass('btn-outline-warning').addClass('btn-outline-success')
-                             .text('Activate').data('status', 'inactive');
-                    btn.hide();
-                } else {
-                    showUserAlert(response.message || 'Failed to deactivate user.', 'danger');
-                }
-            },
-            error: function(xhr) {
-                var message = 'An error occurred while deactivating the user.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                showUserAlert(message, 'danger');
-            },
-            complete: function() {
-                btn.prop('disabled', false);
-            }
-        });
-    });
-
-    // Change Password Modal Handler
-    $(document).on('click', '.change-password-btn', function() {
-        var userId = $(this).data('user-id');
-        $('#passwordUserId').val(userId);
-        $('#changePasswordForm')[0].reset();
-        $('#changePasswordForm').find('.is-invalid').removeClass('is-invalid');
-    });
-
-    // Change Password Form Submission
-    $('#changePasswordForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var submitBtn = form.find('button[type="submit"]');
-        var originalText = submitBtn.text();
-
-        submitBtn.prop('disabled', true).text('Updating...');
-
-        // Clear previous validation errors
-        form.find('.is-invalid').removeClass('is-invalid');
-        form.find('.invalid-feedback').text('');
-
-        $.ajax({
-            url: '<?= base_url('users/updatePassword') ?>',
-            type: 'POST',
-            data: form.serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showUserAlert(response.message, 'success');
-                    $('#changePasswordModal').modal('hide');
-                    form[0].reset();
-                } else {
-                    showUserAlert(response.message || 'Failed to update password.', 'danger');
-                    if (response.errors) {
-                        $.each(response.errors, function(field, error) {
-                            var input = form.find('[name="' + field + '"]');
-                            input.addClass('is-invalid');
-                            input.siblings('.invalid-feedback').text(error);
-                        });
-                    }
-                }
-            },
-            error: function(xhr) {
-                var message = 'An error occurred while updating the password.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                showUserAlert(message, 'danger');
-            },
-            complete: function() {
-                submitBtn.prop('disabled', false).text(originalText);
-            }
-        });
-    });
-
-    // Forward Material Modal Handler
-    $(document).on('click', '.forward-material-btn', function() {
-        var materialId = $(this).data('material-id');
-        $('#forwardMaterialId').val(materialId);
-        $('#forwardMaterialForm')[0].reset();
-        $('#forwardMaterialForm').find('.is-invalid').removeClass('is-invalid');
-    });
-
-    // Forward Material Form Submission
-    $('#forwardMaterialForm').on('submit', function(e) {
-        e.preventDefault();
-        var form = $(this);
-        var submitBtn = form.find('button[type="submit"]');
-        var originalText = submitBtn.text();
-
-        submitBtn.prop('disabled', true).text('Forwarding...');
-
-        // Clear previous validation errors
-        form.find('.is-invalid').removeClass('is-invalid');
-        form.find('.invalid-feedback').text('');
-
-        $.ajax({
-            url: '<?= base_url('materials/forward') ?>',
-            type: 'POST',
-            data: form.serialize(),
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    showUserAlert(response.message, 'success');
-                    $('#forwardMaterialModal').modal('hide');
-                    form[0].reset();
-                    // Reload page to refresh materials list
-                    setTimeout(function() {
-                        location.reload();
-                    }, 1500);
-                } else {
-                    showUserAlert(response.message || 'Failed to forward material.', 'danger');
-                    if (response.errors) {
-                        $.each(response.errors, function(field, error) {
-                            var input = form.find('[name="' + field + '"]');
-                            input.addClass('is-invalid');
-                            input.siblings('.invalid-feedback').text(error);
-                        });
-                    }
-                }
-            },
-            error: function(xhr) {
-                var message = 'An error occurred while forwarding the material.';
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    message = xhr.responseJSON.message;
-                }
-                showUserAlert(message, 'danger');
-            },
-            complete: function() {
-                submitBtn.prop('disabled', false).text(originalText);
-            }
-        });
-    });
-});
-</script>
-<script>
 $(document).ready(function() {
-	// Server-side search with AJAX for dashboard
-	$('#searchForm').submit(function(e) {
+	// Initialize tooltips for all icon buttons
+	$('[title]').tooltip();
+
+	// Make navigation icons functional with visual feedback
+	$('.btn-primary, .btn-info, .btn-success').on('click', function(e) {
+		// Add visual feedback for icon button clicks
+		var $btn = $(this);
+		$btn.addClass('active').find('i').addClass('bi-bounce');
+
+		// Remove animation after click
+		setTimeout(function() {
+			$btn.removeClass('active').find('i').removeClass('bi-bounce');
+		}, 300);
+	});
+
+	// Course search functionality
+	$('#courseSearchForm').submit(function(e) {
 		e.preventDefault();
 		var searchTerm = $('#searchInput').val();
-		$.ajax({
-			url: '/courses/search',
-			type: 'GET',
-			data: { search_term: searchTerm },
-			success: function(data) {
-				var $coursesContainer = $('#coursesContainer');
-				$coursesContainer.empty();
-				if (data.length > 0) {
-					data.forEach(function(course) {
-						$coursesContainer.append(
-							'<div class="col-md-4 mb-4">' +
-								'<div class="card course-card">' +
-									'<div class="card-body">' +
-										'<h5 class="card-title">' + course.course_name + '</h5>' +
-										'<p class="card-text">' + course.course_description + '</p>' +
-										'<a href="/courses/view/' + course.id + '" class="btn btn-primary">View Course</a>' +
-									'</div>' +
-								'</div>' +
-							'</div>'
-						);
-					});
+
+		// Filter table rows based on search term
+		$('table tbody tr').each(function() {
+			var rowText = $(this).text().toLowerCase();
+			var searchText = searchTerm.toLowerCase();
+
+			if (rowText.includes(searchText)) {
+				$(this).show();
+			} else {
+				$(this).hide();
+			}
+		});
+	});
+
+	// Make search icon clickable with visual feedback
+	$('.search-btn').click(function() {
+		// Add visual feedback
+		var $searchBtn = $(this);
+		$searchBtn.find('i').addClass('bi-bounce');
+
+		// Trigger the search form submission
+		$('#courseSearchForm').submit();
+
+		// Remove animation after search
+		setTimeout(function() {
+			$searchBtn.find('i').removeClass('bi-bounce');
+		}, 300);
+	});
+
+	// Add hover effects to action buttons
+	$('.edit-course-btn, .delete-course-btn').hover(
+		function() {
+			// Mouse enter - add hover effect
+			$(this).find('i').addClass('bi-pulse');
+		},
+		function() {
+			// Mouse leave - remove hover effect
+			$(this).find('i').removeClass('bi-pulse');
+		}
+	);
+
+	// Add CSS class for pulse animation
+	$('head').append('<style>.bi-pulse { animation: pulse 1s infinite; } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }</style>');
+
+	// Edit course button click handler
+	$('.edit-course-btn').click(function() {
+		var courseId = $(this).data('course-id');
+		$('#editCourseId').val(courseId);
+
+		// Fetch course data from server
+		$.get('<?= base_url('courses/get/') ?>' + courseId)
+			.done(function(response) {
+				if (response.success) {
+					var course = response.course;
+					$('#editCourseCode').val(course.course_code);
+					$('#editCourseTitle').val(course.course_name);
+					$('#editDescription').val(course.description);
+					$('#editSchoolYear').val(course.school_year);
+					$('#editSemester').val(course.semester);
+					$('#editSchedule').val(course.schedule);
+					$('#editTeacher').val(course.teacher_id);
+					$('#editStartDate').val(course.start_date);
+					$('#editEndDate').val(course.end_date);
 				} else {
-					$coursesContainer.html('<div class="col-12 text-center"><div class="alert alert-info">No courses found matching your search.</div></div>');
+					alert('Failed to load course data: ' + response.message);
 				}
+			})
+			.fail(function() {
+				alert('An error occurred while fetching course data.');
+			});
+	});
+
+	// Edit course form submission with date validation
+	$('#editCourseForm').submit(function(e) {
+		e.preventDefault();
+
+		var startDate = new Date($('#editStartDate').val());
+		var endDate = new Date($('#editEndDate').val());
+
+		// Validate that end date is after start date
+		if (endDate < startDate) {
+			alert('End date must be after start date');
+			return;
+		}
+
+		// Submit form via AJAX
+		$.ajax({
+			url: '<?= base_url('courses/update') ?>',
+			type: 'POST',
+			data: $(this).serialize(),
+			dataType: 'json',
+			success: function(response) {
+				if (response.success) {
+					alert(response.message);
+					$('#editCourseModal').modal('hide');
+					// Refresh the page to see changes
+					location.reload();
+				} else {
+					alert('Error: ' + response.message);
+				}
+			},
+			error: function() {
+				alert('An error occurred while updating the course.');
+			}
+		});
+	});
+
+	// Status dropdown change handler
+	$(document).on('change', '.status-dropdown', function() {
+		var courseId = $(this).data('course-id');
+		var newStatus = $(this).val();
+
+		// Update status via AJAX
+		$.post('<?= base_url('courses/update-status') ?>', {
+			course_id: courseId,
+			status: newStatus
+		}, function(response) {
+			if (response.success) {
+				// Show success message
+				alert(response.message);
+			} else {
+				alert('Error: ' + response.message);
+			}
+		}).fail(function() {
+			alert('An error occurred while updating course status.');
+		});
+	});
+
+	// Edit course button click handler
+	$('.edit-course-btn').click(function() {
+		var courseId = $(this).data('course-id');
+		$('#editCourseId').val(courseId);
+
+		// Fetch course data from server
+		$.get('<?= base_url('courses/get/') ?>' + courseId)
+			.done(function(response) {
+				if (response.success) {
+					var course = response.course;
+					$('#editCourseCode').val(course.course_code);
+					$('#editCourseTitle').val(course.course_name);
+					$('#editDescription').val(course.description);
+					$('#editSchoolYear').val(course.school_year);
+					$('#editSemester').val(course.semester);
+					$('#editSchedule').val(course.schedule);
+					$('#editTeacher').val(course.teacher_id);
+					$('#editStartDate').val(course.start_date);
+					$('#editEndDate').val(course.end_date);
+				} else {
+					alert('Failed to load course data: ' + response.message);
+				}
+			})
+			.fail(function() {
+				alert('An error occurred while fetching course data.');
+			});
+	});
+
+	// Delete course button click handler
+	$(document).on('click', '.delete-course-btn', function() {
+		var courseId = $(this).data('course-id');
+
+		if (confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
+			$.post('<?= base_url('courses/delete') ?>', {
+				course_id: courseId
+			}, function(response) {
+				if (response.success) {
+					alert(response.message);
+					// Refresh the page to see changes
+					location.reload();
+				} else {
+					alert('Error: ' + response.message);
+				}
+			}).fail(function() {
+				alert('An error occurred while deleting the course.');
+			});
+		}
+	});
+
+	// Create course form submission
+	$('#createCourseForm').submit(function(e) {
+		e.preventDefault();
+
+		var startDate = new Date($('#createStartDate').val());
+		var endDate = new Date($('#createEndDate').val());
+
+		// Validate that end date is after start date
+		if (endDate < startDate) {
+			alert('End date must be after start date');
+			return;
+		}
+
+		// Submit form via AJAX
+		$.ajax({
+			url: '<?= base_url('courses/create') ?>',
+			type: 'POST',
+			data: $(this).serialize(),
+			dataType: 'json',
+			success: function(response) {
+				if (response.success) {
+					alert(response.message);
+					$('#createCourseModal').modal('hide');
+					// Refresh the page to see changes
+					location.reload();
+				} else {
+					alert('Error: ' + response.message);
+				}
+			},
+			error: function() {
+				alert('An error occurred while creating the course.');
 			}
 		});
 	});

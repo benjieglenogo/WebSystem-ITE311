@@ -54,8 +54,24 @@ $routes->post('/notifications/mark_read/(:num)', 'Notifications::mark_as_read/$1
 
 // Users Management (Admin only)
 $routes->get('/users', 'Users::index');
+$routes->get('/users/management', 'Auth::userManagement');
 $routes->post('/users/create', 'Users::create');
 $routes->post('/users/updateRole', 'Users::updateRole');
-$routes->post('/users/updatePassword', 'Users::updatePassword');
+    $routes->post('/users/updatePassword', 'Users::updatePassword');
+    $routes->post('/users/update', 'Users::update');
 $routes->post('/users/toggleStatus', 'Users::toggleStatus');
 $routes->post('/users/delete', 'Users::delete');
+
+// Course Management (Admin only)
+$routes->post('/courses/create', 'Course::create');
+$routes->post('/courses/update', 'Course::update');
+$routes->post('/courses/update-status', 'Course::updateStatus');
+$routes->post('/courses/delete', 'Course::delete');
+$routes->get('/courses/get/(:num)', 'Course::get/$1');
+$routes->get('/courses/teachers', 'Course::getTeachers');
+
+// Teacher - Manage Students
+$routes->get('/teacher/students', 'Auth::manageStudents');
+$routes->get('/teacher/students/get', 'Auth::getStudentsForCourse');
+$routes->post('/teacher/students/update-status', 'Auth::updateStudentStatus');
+$routes->post('/teacher/students/remove', 'Auth::removeStudentFromCourse');

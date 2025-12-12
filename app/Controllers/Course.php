@@ -110,4 +110,250 @@ class Course extends BaseController
 
         return view('courses/index', ['courses' => $courses]);
     }
+
+    /**
+     * Get course details by ID (AJAX)
+     */
+    public function get($courseId)
+    {
+        $courseModel = new CourseModel();
+        $course = $courseModel->find($courseId);
+
+        if (!$course) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course not found.'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'course' => $course
+        ]);
+    }
+
+    /**
+     * Get all teachers for course assignment
+     */
+    public function getTeachers()
+    {
+        $userModel = new \App\Models\UserModel();
+        $teachers = $userModel->where('role', 'teacher')->findAll();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'teachers' => $teachers
+        ]);
+    }
+
+    /**
+     * Create a new course (Admin only)
+     */
+    public function create()
+    {
+        // Check if user is admin
+        if (session()->get('userRole') !== 'admin') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Admin privileges required.'
+            ]);
+        }
+
+        $courseModel = new CourseModel();
+
+        $data = [
+            'course_code' => $this->request->getPost('course_code'),
+            'course_name' => $this->request->getPost('course_title'),
+            'description' => $this->request->getPost('description'),
+            'school_year' => $this->request->getPost('school_year'),
+            'semester' => $this->request->getPost('semester'),
+            'schedule' => $this->request->getPost('schedule'),
+            'teacher_id' => $this->request->getPost('teacher_id'),
+            'status' => $this->request->getPost('status') ?? 'active',
+            'start_date' => $this->request->getPost('start_date'),
+            'end_date' => $this->request->getPost('end_date')
+        ];
+
+        // Validate required fields
+        $requiredFields = ['course_code', 'course_name', 'description', 'school_year', 'semester', 'schedule'];
+        foreach ($requiredFields as $field) {
+            if (empty($data[$field])) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required.'
+                ]);
+            }
+        }
+
+        if ($courseModel->insert($data)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Course created successfully!'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to create course. Please try again.'
+            ]);
+        }
+    }
+
+    /**
+     * Update course details (Admin only)
+     */
+    public function update()
+    {
+        // Check if user is admin
+        if (session()->get('userRole') !== 'admin') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Admin privileges required.'
+            ]);
+        }
+
+        $courseId = $this->request->getPost('course_id');
+        if (!$courseId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course ID is required.'
+            ]);
+        }
+
+        $courseModel = new CourseModel();
+        $course = $courseModel->find($courseId);
+
+        if (!$course) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course not found.'
+            ]);
+        }
+
+        $data = [
+            'course_code' => $this->request->getPost('course_code'),
+            'course_name' => $this->request->getPost('course_title'),
+            'description' => $this->request->getPost('description'),
+            'school_year' => $this->request->getPost('school_year'),
+            'semester' => $this->request->getPost('semester'),
+            'schedule' => $this->request->getPost('schedule'),
+            'teacher_id' => $this->request->getPost('teacher_id'),
+            'status' => $this->request->getPost('status') ?? 'active',
+            'start_date' => $this->request->getPost('start_date'),
+            'end_date' => $this->request->getPost('end_date')
+        ];
+
+        // Validate required fields
+        $requiredFields = ['course_code', 'course_name', 'description', 'school_year', 'semester', 'schedule'];
+        foreach ($requiredFields as $field) {
+            if (empty($data[$field])) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required.'
+                ]);
+            }
+        }
+
+        if ($courseModel->update($courseId, $data)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Course updated successfully!'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update course. Please try again.'
+            ]);
+        }
+    }
+
+    /**
+     * Update course status (Admin only)
+     */
+    public function updateStatus()
+    {
+        // Check if user is admin
+        if (session()->get('userRole') !== 'admin') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Admin privileges required.'
+            ]);
+        }
+
+        $courseId = $this->request->getPost('course_id');
+        $status = $this->request->getPost('status');
+
+        if (!$courseId || !$status) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course ID and status are required.'
+            ]);
+        }
+
+        $courseModel = new CourseModel();
+        $course = $courseModel->find($courseId);
+
+        if (!$course) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course not found.'
+            ]);
+        }
+
+        if ($courseModel->update($courseId, ['status' => $status])) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Course status updated successfully!'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update course status. Please try again.'
+            ]);
+        }
+    }
+
+    /**
+     * Delete a course (Admin only)
+     */
+    public function delete()
+    {
+        // Check if user is admin
+        if (session()->get('userRole') !== 'admin') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Admin privileges required.'
+            ]);
+        }
+
+        $courseId = $this->request->getPost('course_id');
+
+        if (!$courseId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course ID is required.'
+            ]);
+        }
+
+        $courseModel = new CourseModel();
+        $course = $courseModel->find($courseId);
+
+        if (!$course) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course not found.'
+            ]);
+        }
+
+        if ($courseModel->delete($courseId)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Course deleted successfully!'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to delete course. Please try again.'
+            ]);
+        }
+    }
 }

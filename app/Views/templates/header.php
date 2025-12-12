@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <title><?= $this->renderSection('title') ?> - My Learning System</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <style>
     /* Simple and clean background */
@@ -86,10 +87,9 @@
             <li class="nav-item"><a class="nav-link" href="<?= site_url('dashboard') ?>">Dashboard</a></li>
             <li class="nav-item"><a class="nav-link" href="<?= site_url('courses') ?>">Courses</a></li>
             <?php if (session('userRole') === 'admin'): ?>
-              <li class="nav-item"><a class="nav-link" href="<?= site_url('admin') ?>">Admin Panel</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= site_url('admin/users') ?>">User Management</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('users/management') ?>">User Management</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('dashboard') ?>">Course Management</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('announcements') ?>">Announcements</a></li>
-              <li class="nav-item"><a class="nav-link" href="<?= site_url('admin/reports') ?>">System Reports</a></li>
             <?php elseif (session('userRole') === 'teacher'): ?>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('gradebook') ?>">Gradebook</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('assignments') ?>">Assignments</a></li>
@@ -250,12 +250,26 @@
       // Fetch notifications on page load
       <?php if (session('isLoggedIn')): ?>
       fetchNotifications();
-      
+
       // Optional: Fetch notifications every 60 seconds (real-time updates)
       setInterval(function() {
           fetchNotifications();
       }, 60000);
       <?php endif; ?>
+
+      // Make notification bell icon clickable and functional
+      $('#notificationDropdown').click(function(e) {
+          e.preventDefault();
+          // Toggle the dropdown menu
+          $('#notificationDropdownMenu').toggle();
+      });
+
+      // Close notification dropdown when clicking outside
+      $(document).click(function(e) {
+          if (!$(e.target).closest('#notificationDropdown, #notificationDropdownMenu').length) {
+              $('#notificationDropdownMenu').hide();
+          }
+      });
 
       // Helper function to escape HTML
       function escapeHtml(text) {
