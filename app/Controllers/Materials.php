@@ -15,7 +15,7 @@ class Materials extends BaseController
     public function upload($courseId = null)
     {
         $session = session();
-        
+
         // Check if user is logged in
         if (! $session->get('isLoggedIn')) {
             return redirect()->to(base_url('login'));
@@ -48,7 +48,7 @@ class Materials extends BaseController
         // Process file upload
         if ($this->request->getMethod() === 'POST') {
             $file = $this->request->getFile('material_file');
-            
+
             if (!$file || !$file->isValid()) {
                 return redirect()->back()->with('error', 'No file was uploaded or file is invalid.');
             }
@@ -58,13 +58,48 @@ class Materials extends BaseController
                 return redirect()->back()->with('error', 'File has already been moved.');
             }
 
+            // SECURE FILE VALIDATION
+            // 1. Check file size (max 10MB)
+            $maxSize = 10 * 1024 * 1024; // 10MB
+            if ($file->getSize() > $maxSize) {
+                return redirect()->back()->with('error', 'File size exceeds maximum limit of 10MB.');
+            }
+
+            // 2. Check file extension
+            $allowedExtensions = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'zip', 'rar', 'jpg', 'jpeg', 'png', 'txt'];
+            $fileExtension = strtolower($file->getClientExtension());
+
+            if (!in_array($fileExtension, $allowedExtensions)) {
+                return redirect()->back()->with('error', 'File type not allowed. Allowed types: ' . implode(', ', $allowedExtensions));
+            }
+
+            // 3. Check MIME type for additional security
+            $allowedMimeTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-powerpoint',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/zip',
+                'application/x-rar-compressed',
+                'image/jpeg',
+                'image/jpg',
+                'image/png',
+                'text/plain'
+            ];
+
+            $fileMimeType = $file->getMimeType();
+            if (!in_array($fileMimeType, $allowedMimeTypes)) {
+                return redirect()->back()->with('error', 'File type not allowed for security reasons.');
+            }
+
             // Create uploads directory if it doesn't exist
             $uploadPath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'materials' . DIRECTORY_SEPARATOR;
             if (!is_dir($uploadPath)) {
                 mkdir($uploadPath, 0755, true);
             }
 
-            // Generate unique filename
+            // Generate unique filename with original extension
             $newName = $file->getRandomName();
             $filePath = 'materials' . DIRECTORY_SEPARATOR . $newName;
 
@@ -76,12 +111,15 @@ class Materials extends BaseController
                     'course_id' => $course_id,
                     'file_name' => $file->getClientName(),
                     'file_path' => $filePath,
+                    'file_type' => $fileExtension,
+                    'file_size' => $file->getSize(),
+                    'description' => $this->request->getPost('description') ?? '',
                     'created_at' => date('Y-m-d H:i:s')
                 ];
 
                 if ($materialModel->insert($data)) {
-                    // Add cache busting timestamp to prevent cached page display
-                    return redirect()->to(base_url('dashboard') . '?t=' . time())->with('success', 'Material uploaded successfully!');
+                    return redirect()->to(base_url('materials/course/' . $course_id))
+                        ->with('success', 'Material uploaded successfully!');
                 } else {
                     // Delete uploaded file if database insert failed
                     unlink(WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . $filePath);
@@ -92,8 +130,61 @@ class Materials extends BaseController
             }
         }
 
-        // GET request - show upload form (this would be handled in dashboard view now)
-        return redirect()->to(base_url('dashboard') . '?t=' . time());
+        // GET request - show upload form
+        return view('materials/upload', [
+            'course_id' => $course_id,
+            'course_name' => $course['course_name']
+        ]);
+    }
+
+    /**
+     * Display materials for a course
+     */
+    public function display($courseId = null)
+    {
+        $session = session();
+
+        // Check if user is logged in
+        if (! $session->get('isLoggedIn')) {
+            return redirect()->to(base_url('login'));
+        }
+
+        if (!$courseId) {
+            return redirect()->back()->with('error', 'Course ID is required.');
+        }
+
+        // Verify course exists
+        $courseModel = new CourseModel();
+        $course = $courseModel->find($courseId);
+
+        if (!$course) {
+            return redirect()->back()->with('error', 'Course not found.');
+        }
+
+        // Check if user has access to this course
+        $userRole = $session->get('userRole');
+        $userId = $session->get('userId');
+
+        if ($userRole === 'student') {
+            // Check if student is enrolled in the course
+            $enrollmentModel = new EnrollmentModel();
+            if (! $enrollmentModel->isAlreadyEnrolled($userId, $courseId)) {
+                return redirect()->back()->with('error', 'You must be enrolled in this course to view materials.');
+            }
+        } elseif ($userRole !== 'admin' && $userRole !== 'teacher') {
+            return redirect()->back()->with('error', 'Access denied.');
+        }
+
+        // Get materials for this course
+        $materialModel = new MaterialModel();
+        $materials = $materialModel->getMaterialsByCourse($courseId);
+
+        // Load view
+        return view('materials/display', [
+            'course_id' => $courseId,
+            'course_name' => $course['course_name'],
+            'materials' => $materials
+        ]);
     }
 
     /**

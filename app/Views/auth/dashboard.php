@@ -698,19 +698,37 @@ $(document).ready(function() {
 		var courseId = $(this).data('course-id');
 		var newStatus = $(this).val();
 
-		// Update status via AJAX
-		$.post('<?= base_url('courses/update-status') ?>', {
-			course_id: courseId,
-			status: newStatus
-		}, function(response) {
-			if (response.success) {
-				// Show success message
-				alert(response.message);
-			} else {
-				alert('Error: ' + response.message);
+		// Update status via AJAX with CSRF token
+		$.ajax({
+			url: '<?= base_url('courses/update-status') ?>',
+			type: 'POST',
+			data: {
+				course_id: courseId,
+				status: newStatus,
+				<?= csrf_token() ?>: '<?= csrf_hash() ?>'
+			},
+			dataType: 'json',
+			success: function(response) {
+				if (response.success) {
+					// Show success message
+					alert(response.message);
+				} else {
+					alert('Error: ' + response.message);
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('AJAX Error:', error);
+				var errorMessage = 'An error occurred while updating course status.';
+				try {
+					var response = JSON.parse(xhr.responseText);
+					if (response && response.message) {
+						errorMessage = response.message;
+					}
+				} catch (e) {
+					// Couldn't parse JSON, use default message
+				}
+				alert(errorMessage);
 			}
-		}).fail(function() {
-			alert('An error occurred while updating course status.');
 		});
 	});
 
@@ -747,18 +765,36 @@ $(document).ready(function() {
 		var courseId = $(this).data('course-id');
 
 		if (confirm('Are you sure you want to delete this course? This action cannot be undone.')) {
-			$.post('<?= base_url('courses/delete') ?>', {
-				course_id: courseId
-			}, function(response) {
-				if (response.success) {
-					alert(response.message);
-					// Refresh the page to see changes
-					location.reload();
-				} else {
-					alert('Error: ' + response.message);
+			$.ajax({
+				url: '<?= base_url('courses/delete') ?>',
+				type: 'POST',
+				data: {
+					course_id: courseId,
+					<?= csrf_token() ?>: '<?= csrf_hash() ?>'
+				},
+				dataType: 'json',
+				success: function(response) {
+					if (response.success) {
+						alert(response.message);
+						// Refresh the page to see changes
+						location.reload();
+					} else {
+						alert('Error: ' + response.message);
+					}
+				},
+				error: function(xhr, status, error) {
+					console.error('AJAX Error:', error);
+					var errorMessage = 'An error occurred while deleting the course.';
+					try {
+						var response = JSON.parse(xhr.responseText);
+						if (response && response.message) {
+							errorMessage = response.message;
+						}
+					} catch (e) {
+						// Couldn't parse JSON, use default message
+					}
+					alert(errorMessage);
 				}
-			}).fail(function() {
-				alert('An error occurred while deleting the course.');
 			});
 		}
 	});

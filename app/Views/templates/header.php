@@ -148,14 +148,18 @@
     &copy; <?= date('Y') ?> ITE-311 • All rights reserved.
   </footer>
 
-  <!-- Scripts -->
-  <?= $this->renderSection('scripts') ?>
-
-  <!-- jQuery -->
+  <!-- jQuery (must be loaded first) -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-  <!-- Bootstrap JS -->
+  <!-- Bootstrap JS (depends on jQuery) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- DataTables JS (if used, depends on jQuery) -->
+  <!-- <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> -->
+  <!-- <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script> -->
+
+  <!-- Custom Scripts (must be loaded last, after all dependencies) -->
+  <?= $this->renderSection('scripts') ?>
 
   <!-- Notification and Enrollment AJAX Scripts -->
   <script>

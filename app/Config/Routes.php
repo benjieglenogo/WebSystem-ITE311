@@ -44,9 +44,12 @@ $routes->post('/courses/search', 'Course::search');
 $routes->get('/courses', 'Course::index');
 
 // Materials
-$routes->post('/materials/upload', 'Materials::upload');
+$routes->get('/admin/course/(:num)/upload', 'Materials::upload/$1');
+$routes->post('/admin/course/(:num)/upload', 'Materials::upload/$1');
+$routes->get('/materials/course/(:num)', 'Materials::display/$1');
 $routes->get('/materials/delete/(:num)', 'Materials::delete/$1');
 $routes->get('/materials/download/(:num)', 'Materials::download/$1');
+$routes->post('/materials/forward', 'Materials::forward');
 
 // Notifications
 $routes->get('/notifications', 'Notifications::get');

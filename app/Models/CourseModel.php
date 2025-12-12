@@ -8,7 +8,7 @@ class CourseModel extends Model
 {
     protected $table = 'courses';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['course_name', 'description', 'teacher_id', 'created_at'];
+    protected $allowedFields = ['course_name', 'description', 'teacher_id', 'created_at', 'course_code', 'school_year', 'semester', 'schedule', 'status', 'start_date', 'end_date'];
 
     /**
      * Search courses by name or description.
