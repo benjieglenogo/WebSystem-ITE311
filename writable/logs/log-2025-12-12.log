@@ -3621,3 +3621,277 @@ in SYSTEMPATH\CLI\BaseCommand.php on line 133.
  6 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
  7 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
  8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2025-12-12 17:42:18 --> ErrorException: require(C:\xampp\htdocs\ITE311-GLENOGO\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/CourseSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(C:\\xampp\\htdocs\\ITE311-GLENOGO\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'C:\\xampp\\htdocs\\ITE311-GLENOGO\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(Error))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2025-12-12 17:42:44 --> mysqli_sql_exception: Duplicate entry 'admin@example.com' for key 'email' in C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 C:\xampp\htdocs\ITE311-GLENOGO\app\Database\Seeds\UserSeeder.php(38): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 C:\xampp\htdocs\ITE311-GLENOGO\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\ITE311-GLENOGO\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-12-12 17:42:44 --> ErrorException: require(C:\xampp\htdocs\ITE311-GLENOGO\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/UserSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(C:\\xampp\\htdocs\\ITE311-GLENOGO\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'C:\\xampp\\htdocs\\ITE311-GLENOGO\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(CodeIgniter\Database\Exceptions\DatabaseException))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2025-12-12 17:48:27 --> mysqli_sql_exception: Duplicate entry 'admin@example.com' for key 'email' in C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 C:\xampp\htdocs\ITE311-GLENOGO\app\Database\Seeds\UserSeeder.php(38): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 C:\xampp\htdocs\ITE311-GLENOGO\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\ITE311-GLENOGO\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-12-12 17:48:27 --> ErrorException: require(C:\xampp\htdocs\ITE311-GLENOGO\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/UserSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(C:\\xampp\\htdocs\\ITE311-GLENOGO\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'C:\\xampp\\htdocs\\ITE311-GLENOGO\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(CodeIgniter\Database\Exceptions\DatabaseException))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2025-12-12 17:48:43 --> mysqli_sql_exception: Duplicate entry 'admin@example.com' for key 'email' in C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 C:\xampp\htdocs\ITE311-GLENOGO\app\Database\Seeds\UserSeeder.php(38): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 C:\xampp\htdocs\ITE311-GLENOGO\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\ITE311-GLENOGO\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-12-12 17:48:43 --> ErrorException: require(C:\xampp\htdocs\ITE311-GLENOGO\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/UserSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(C:\\xampp\\htdocs\\ITE311-GLENOGO\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'C:\\xampp\\htdocs\\ITE311-GLENOGO\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(CodeIgniter\Database\Exceptions\DatabaseException))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2025-12-12 18:03:32 --> ErrorException: require(C:\xampp\htdocs\ITE311-GLENOGO\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/CourseSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(C:\\xampp\\htdocs\\ITE311-GLENOGO\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'C:\\xampp\\htdocs\\ITE311-GLENOGO\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(Error))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2025-12-12 18:04:02 --> TypeError: CodeIgniter\CLI\InputOutput::input(): Return value must be of type string, bool returned
+[Method: CLI, Route: db:seed]
+in SYSTEMPATH\CLI\InputOutput.php on line 46.
+ 1 SYSTEMPATH\CLI\CLI.php(260): CodeIgniter\CLI\InputOutput->input()
+ 2 SYSTEMPATH\Commands\Database\Seed.php(75): CodeIgniter\CLI\CLI::prompt('Seeder name', null, [...])
+ 3 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 4 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [])
+ 5 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 6 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 7 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+ERROR - 2025-12-12 18:09:13 --> mysqli_sql_exception: Duplicate entry 'ITE311' for key 'course_code' in C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `co...', 0)
+#1 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `co...')
+#2 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `co...')
+#3 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `co...', Array, false)
+#4 C:\xampp\htdocs\ITE311-GLENOGO\system\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+#5 C:\xampp\htdocs\ITE311-GLENOGO\system\BaseModel.php(838): CodeIgniter\Model->doInsert(Array)
+#6 C:\xampp\htdocs\ITE311-GLENOGO\system\Model.php(797): CodeIgniter\BaseModel->insert(Array, true)
+#7 C:\xampp\htdocs\ITE311-GLENOGO\app\Controllers\Course.php(205): CodeIgniter\Model->insert(Array)
+#8 C:\xampp\htdocs\ITE311-GLENOGO\system\CodeIgniter.php(933): App\Controllers\Course->create()
+#9 C:\xampp\htdocs\ITE311-GLENOGO\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Course))
+#10 C:\xampp\htdocs\ITE311-GLENOGO\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\ITE311-GLENOGO\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-12-12 18:09:13 --> CodeIgniter\Database\Exceptions\DatabaseException: Duplicate entry 'ITE311' for key 'course_code'
+[Method: POST, Route: courses/create]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (:course_code:, :course_name:, :description:, :school_year:, :semester:, :schedule:, :teacher_id:, :status:, :start_date:, :end_date:)', [...], false)
+ 2 SYSTEMPATH\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+ 3 SYSTEMPATH\BaseModel.php(838): CodeIgniter\Model->doInsert([...])
+ 4 SYSTEMPATH\Model.php(797): CodeIgniter\BaseModel->insert([...], true)
+ 5 APPPATH\Controllers\Course.php(205): CodeIgniter\Model->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Course->create()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Course))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-12 18:09:13 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Duplicate entry 'ITE311' for key 'course_code'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'FIlipino\', \'qajndj\', \'2025-2026\', \'2nd Semester\', \'Monday-Wednesday\', \'2\', \'active\', \'2025-12-13\', \'2026-06-10\')')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'FIlipino\', \'qajndj\', \'2025-2026\', \'2nd Semester\', \'Monday-Wednesday\', \'2\', \'active\', \'2025-12-13\', \'2026-06-10\')')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (:course_code:, :course_name:, :description:, :school_year:, :semester:, :schedule:, :teacher_id:, :status:, :start_date:, :end_date:)', [...], false)
+ 4 SYSTEMPATH\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+ 5 SYSTEMPATH\BaseModel.php(838): CodeIgniter\Model->doInsert([...])
+ 6 SYSTEMPATH\Model.php(797): CodeIgniter\BaseModel->insert([...], true)
+ 7 APPPATH\Controllers\Course.php(205): CodeIgniter\Model->insert([...])
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Course->create()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Course))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-12 18:09:13 --> [Caused by] mysqli_sql_exception: Duplicate entry 'ITE311' for key 'course_code'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'FIlipino\', \'qajndj\', \'2025-2026\', \'2nd Semester\', \'Monday-Wednesday\', \'2\', \'active\', \'2025-12-13\', \'2026-06-10\')', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'FIlipino\', \'qajndj\', \'2025-2026\', \'2nd Semester\', \'Monday-Wednesday\', \'2\', \'active\', \'2025-12-13\', \'2026-06-10\')')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'FIlipino\', \'qajndj\', \'2025-2026\', \'2nd Semester\', \'Monday-Wednesday\', \'2\', \'active\', \'2025-12-13\', \'2026-06-10\')')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (:course_code:, :course_name:, :description:, :school_year:, :semester:, :schedule:, :teacher_id:, :status:, :start_date:, :end_date:)', [...], false)
+ 5 SYSTEMPATH\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+ 6 SYSTEMPATH\BaseModel.php(838): CodeIgniter\Model->doInsert([...])
+ 7 SYSTEMPATH\Model.php(797): CodeIgniter\BaseModel->insert([...], true)
+ 8 APPPATH\Controllers\Course.php(205): CodeIgniter\Model->insert([...])
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Course->create()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Course))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-12-12 18:17:04 --> mysqli_sql_exception: Duplicate entry 'ITE311' for key 'course_code' in C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `co...', 0)
+#1 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `co...')
+#2 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `co...')
+#3 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `co...', Array, false)
+#4 C:\xampp\htdocs\ITE311-GLENOGO\system\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+#5 C:\xampp\htdocs\ITE311-GLENOGO\system\BaseModel.php(838): CodeIgniter\Model->doInsert(Array)
+#6 C:\xampp\htdocs\ITE311-GLENOGO\system\Model.php(797): CodeIgniter\BaseModel->insert(Array, true)
+#7 C:\xampp\htdocs\ITE311-GLENOGO\app\Controllers\Auth.php(712): CodeIgniter\Model->insert(Array)
+#8 C:\xampp\htdocs\ITE311-GLENOGO\system\CodeIgniter.php(933): App\Controllers\Auth->teacherCreateCourse()
+#9 C:\xampp\htdocs\ITE311-GLENOGO\system\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+#10 C:\xampp\htdocs\ITE311-GLENOGO\system\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(NULL, Object(Config\Cache), false)
+#11 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(363): CodeIgniter\CodeIgniter->run()
+#12 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+#13 C:\xampp\htdocs\ITE311-GLENOGO\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+#14 {main}
+CRITICAL - 2025-12-12 18:17:04 --> CodeIgniter\Database\Exceptions\DatabaseException: Duplicate entry 'ITE311' for key 'course_code'
+[Method: POST, Route: teacher/course-management/create-course]
+in SYSTEMPATH\Database\BaseConnection.php on line 684.
+ 1 SYSTEMPATH\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (:course_code:, :course_name:, :description:, :school_year:, :semester:, :schedule:, :teacher_id:, :status:, :start_date:, :end_date:)', [...], false)
+ 2 SYSTEMPATH\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+ 3 SYSTEMPATH\BaseModel.php(838): CodeIgniter\Model->doInsert([...])
+ 4 SYSTEMPATH\Model.php(797): CodeIgniter\BaseModel->insert([...], true)
+ 5 APPPATH\Controllers\Auth.php(712): CodeIgniter\Model->insert([...])
+ 6 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Auth->teacherCreateCourse()
+ 7 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+ 8 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-12 18:17:04 --> [Caused by] CodeIgniter\Database\Exceptions\DatabaseException: Duplicate entry 'ITE311' for key 'course_code'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 332.
+ 1 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'Web Systems and Technologies\', \'dawwdawd\', \'2025-2026\', \'2nd\', \'Mon-Fri\', \'2\', \'active\', \'2025-12-13\', \'2026-06-13\')')
+ 2 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'Web Systems and Technologies\', \'dawwdawd\', \'2025-2026\', \'2nd\', \'Mon-Fri\', \'2\', \'active\', \'2025-12-13\', \'2026-06-13\')')
+ 3 SYSTEMPATH\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (:course_code:, :course_name:, :description:, :school_year:, :semester:, :schedule:, :teacher_id:, :status:, :start_date:, :end_date:)', [...], false)
+ 4 SYSTEMPATH\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+ 5 SYSTEMPATH\BaseModel.php(838): CodeIgniter\Model->doInsert([...])
+ 6 SYSTEMPATH\Model.php(797): CodeIgniter\BaseModel->insert([...], true)
+ 7 APPPATH\Controllers\Auth.php(712): CodeIgniter\Model->insert([...])
+ 8 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Auth->teacherCreateCourse()
+ 9 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+10 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+11 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+12 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+13 FCPATH\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+CRITICAL - 2025-12-12 18:17:04 --> [Caused by] mysqli_sql_exception: Duplicate entry 'ITE311' for key 'course_code'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 327.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'Web Systems and Technologies\', \'dawwdawd\', \'2025-2026\', \'2nd\', \'Mon-Fri\', \'2\', \'active\', \'2025-12-13\', \'2026-06-13\')', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'Web Systems and Technologies\', \'dawwdawd\', \'2025-2026\', \'2nd\', \'Mon-Fri\', \'2\', \'active\', \'2025-12-13\', \'2026-06-13\')')
+ 3 SYSTEMPATH\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (\'ITE311\', \'Web Systems and Technologies\', \'dawwdawd\', \'2025-2026\', \'2nd\', \'Mon-Fri\', \'2\', \'active\', \'2025-12-13\', \'2026-06-13\')')
+ 4 SYSTEMPATH\Database\BaseBuilder.php(2345): CodeIgniter\Database\BaseConnection->query('INSERT INTO `courses` (`course_code`, `course_name`, `description`, `school_year`, `semester`, `schedule`, `teacher_id`, `status`, `start_date`, `end_date`) VALUES (:course_code:, :course_name:, :description:, :school_year:, :semester:, :schedule:, :teacher_id:, :status:, :start_date:, :end_date:)', [...], false)
+ 5 SYSTEMPATH\Model.php(394): CodeIgniter\Database\BaseBuilder->insert()
+ 6 SYSTEMPATH\BaseModel.php(838): CodeIgniter\Model->doInsert([...])
+ 7 SYSTEMPATH\Model.php(797): CodeIgniter\BaseModel->insert([...], true)
+ 8 APPPATH\Controllers\Auth.php(712): CodeIgniter\Model->insert([...])
+ 9 SYSTEMPATH\CodeIgniter.php(933): App\Controllers\Auth->teacherCreateCourse()
+10 SYSTEMPATH\CodeIgniter.php(507): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Auth))
+11 SYSTEMPATH\CodeIgniter.php(354): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+12 SYSTEMPATH\Boot.php(363): CodeIgniter\CodeIgniter->run()
+13 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+14 FCPATH\index.php(89): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+ERROR - 2025-12-12 18:38:22 --> mysqli_sql_exception: Duplicate entry 'admin@example.com' for key 'email' in C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php:327
+Stack trace:
+#0 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\MySQLi\Connection.php(327): mysqli->query('INSERT INTO `us...', 0)
+#1 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(729): CodeIgniter\Database\MySQLi\Connection->execute('INSERT INTO `us...')
+#2 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseConnection.php(646): CodeIgniter\Database\BaseConnection->simpleQuery('INSERT INTO `us...')
+#3 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query('INSERT INTO `us...', NULL, false)
+#4 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute('_insertBatch', 100)
+#5 C:\xampp\htdocs\ITE311-GLENOGO\app\Database\Seeds\UserSeeder.php(38): CodeIgniter\Database\BaseBuilder->insertBatch(Array)
+#6 C:\xampp\htdocs\ITE311-GLENOGO\system\Database\Seeder.php(149): App\Database\Seeds\UserSeeder->run()
+#7 C:\xampp\htdocs\ITE311-GLENOGO\system\Commands\Database\Seed.php(79): CodeIgniter\Database\Seeder->call('App\\Database\\Se...')
+#8 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run(Array)
+#9 C:\xampp\htdocs\ITE311-GLENOGO\system\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', Array)
+#10 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(388): CodeIgniter\CLI\Console->run()
+#11 C:\xampp\htdocs\ITE311-GLENOGO\system\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+#12 C:\xampp\htdocs\ITE311-GLENOGO\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+#13 {main}
+CRITICAL - 2025-12-12 18:38:23 --> ErrorException: require(C:\xampp\htdocs\ITE311-GLENOGO\app\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory
+[Method: CLI, Route: db:seed/UserSeeder]
+in SYSTEMPATH\CLI\BaseCommand.php on line 133.
+ 1 SYSTEMPATH\CLI\BaseCommand.php(133): CodeIgniter\Debug\Exceptions->errorHandler(2, 'require(C:\\xampp\\htdocs\\ITE311-GLENOGO\\app\\Views/errors/cli/error_exception.php): Failed to open stream: No such file or directory', 'C:\\xampp\\htdocs\\ITE311-GLENOGO\\system\\CLI\\BaseCommand.php', 133)
+ 2 SYSTEMPATH\CLI\BaseCommand.php(133): require()
+ 3 SYSTEMPATH\Commands\Database\Seed.php(81): CodeIgniter\CLI\BaseCommand->showError(Object(CodeIgniter\Database\Exceptions\DatabaseException))
+ 4 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 5 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [...])
+ 6 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 7 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 8 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2025-12-12 18:38:35 --> TypeError: CodeIgniter\CLI\InputOutput::input(): Return value must be of type string, bool returned
+[Method: CLI, Route: db:seed]
+in SYSTEMPATH\CLI\InputOutput.php on line 46.
+ 1 SYSTEMPATH\CLI\CLI.php(260): CodeIgniter\CLI\InputOutput->input()
+ 2 SYSTEMPATH\Commands\Database\Seed.php(75): CodeIgniter\CLI\CLI::prompt('Seeder name', null, [...])
+ 3 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Seed->run([])
+ 4 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('db:seed', [])
+ 5 SYSTEMPATH\Boot.php(388): CodeIgniter\CLI\Console->run()
+ 6 SYSTEMPATH\Boot.php(133): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+ 7 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))

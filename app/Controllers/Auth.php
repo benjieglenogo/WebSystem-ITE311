@@ -225,9 +225,13 @@ class Auth extends BaseController
                             $enrolledCourses = [];
                         }
 
-                        // Get available courses for enrollment
-                        $availableCourses = $courseModel->getAvailableCourses($userId);
-                        if (!is_array($availableCourses)) {
+                        // Get available courses for enrollment (with better error handling)
+                        try {
+                            $availableCourses = $courseModel->getAvailableCourses($userId);
+                            if (!is_array($availableCourses)) {
+                                $availableCourses = [];
+                            }
+                        } catch (\Exception $e) {
                             $availableCourses = [];
                         }
 
@@ -538,6 +542,264 @@ class Auth extends BaseController
                 'success' => false,
                 'message' => 'Failed to remove student from course.'
             ]);
+        }
+    }
+
+    /**
+     * Course Management Dashboard (Teacher only)
+     */
+    public function courseManagement()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'teacher') {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Access denied. Teacher privileges required.');
+        }
+
+        $userId = $session->get('userId');
+        $courseModel = new \App\Models\CourseModel();
+
+        // Get teacher's assigned courses
+        if ($courseModel->db->fieldExists('teacher_id', 'courses')) {
+            $teacherCourses = $courseModel->where('teacher_id', $userId)->where('status', 'active')->findAll();
+        } else {
+            $teacherCourses = [];
+        }
+
+        $data = [
+            'teacherCourses' => $teacherCourses,
+        ];
+
+        return view('teachers/course_management', $data);
+    }
+
+    /**
+     * Get students for a course (AJAX for teachers)
+     */
+    public function getStudents()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'teacher') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $courseId = $this->request->getGet('course_id');
+        if (!$courseId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Course ID required']);
+        }
+
+        // Verify teacher owns this course
+        $userId = $session->get('userId');
+        $courseModel = new \App\Models\CourseModel();
+        $course = $courseModel->where('id', $courseId)->where('teacher_id', $userId)->first();
+        if (!$course) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Course not found or access denied']);
+        }
+
+        $enrollmentModel = new \App\Models\EnrollmentModel();
+        $students = $enrollmentModel->select('users.id, users.name, users.email, enrollments.enrollment_date, enrollments.user_id')
+            ->join('users', 'users.id = enrollments.user_id')
+            ->where('enrollments.course_id', $courseId)
+            ->findAll();
+
+        return $this->response->setJSON(['success' => true, 'students' => $students]);
+    }
+
+    /**
+     * Update student status in course
+     */
+    public function updateStatus()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'teacher') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $userId = $this->request->getPost('user_id');
+        $newStatus = $this->request->getPost('new_status');
+        $courseId = $this->request->getPost('course_id');
+
+        if (!$userId || !$newStatus || !$courseId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Required fields missing']);
+        }
+
+        // Verify teacher owns this course
+        $teacherId = $session->get('userId');
+        $courseModel = new \App\Models\CourseModel();
+        $course = $courseModel->where('id', $courseId)->where('teacher_id', $teacherId)->first();
+        if (!$course) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $userModel = new \App\Models\UserModel();
+        if ($userModel->update($userId, ['status' => $newStatus])) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Student status updated']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to update status']);
+        }
+    }
+
+    /**
+     * Remove student from course
+     */
+    public function remove()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'teacher') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $userId = $this->request->getPost('user_id');
+        $courseId = $this->request->getPost('course_id');
+
+        if (!$userId || !$courseId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Required fields missing']);
+        }
+
+        // Verify teacher owns this course
+        $teacherId = $session->get('userId');
+        $courseModel = new \App\Models\CourseModel();
+        $course = $courseModel->where('id', $courseId)->where('teacher_id', $teacherId)->first();
+        if (!$course) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $enrollmentModel = new \App\Models\EnrollmentModel();
+        $enrollment = $enrollmentModel->where('user_id', $userId)->where('course_id', $courseId)->first();
+        if (!$enrollment) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Student not enrolled']);
+        }
+
+        if ($enrollmentModel->delete($enrollment['id'])) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Student removed from course']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to remove student']);
+        }
+    }
+
+    /**
+     * Create a new course (Teacher only)
+     */
+    public function teacherCreateCourse()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'teacher') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $courseModel = new \App\Models\CourseModel();
+
+        $data = [
+            'course_code' => $this->request->getPost('course_code'),
+            'course_name' => $this->request->getPost('course_name'),
+            'description' => $this->request->getPost('description'),
+            'school_year' => $this->request->getPost('school_year'),
+            'semester' => $this->request->getPost('semester'),
+            'schedule' => $this->request->getPost('schedule'),
+            'teacher_id' => $session->get('userId'),
+            'status' => 'active',
+            'start_date' => $this->request->getPost('start_date'),
+            'end_date' => $this->request->getPost('end_date')
+        ];
+
+        // Validate required fields
+        $requiredFields = ['course_code', 'course_name', 'description', 'school_year', 'semester', 'schedule'];
+        foreach ($requiredFields as $field) {
+            if (empty($data[$field])) {
+                return $this->response->setJSON(['success' => false, 'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required']);
+            }
+        }
+
+        if ($courseModel->insert($data)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Course created successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to create course']);
+        }
+    }
+
+    /**
+     * Update teacher's course
+     */
+    public function teacherUpdateCourse()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'teacher') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $courseId = $this->request->getPost('course_id');
+        if (!$courseId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Course ID required']);
+        }
+
+        // Verify teacher owns this course
+        $teacherId = $session->get('userId');
+        $courseModel = new \App\Models\CourseModel();
+        $course = $courseModel->where('id', $courseId)->where('teacher_id', $teacherId)->first();
+        if (!$course) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Course not found or access denied']);
+        }
+
+        $data = [
+            'course_code' => $this->request->getPost('course_code'),
+            'course_name' => $this->request->getPost('course_name'),
+            'description' => $this->request->getPost('description'),
+            'school_year' => $this->request->getPost('school_year'),
+            'semester' => $this->request->getPost('semester'),
+            'schedule' => $this->request->getPost('schedule'),
+            'status' => $this->request->getPost('status') ?: 'active',
+            'start_date' => $this->request->getPost('start_date'),
+            'end_date' => $this->request->getPost('end_date')
+        ];
+
+        // Validate required fields
+        $requiredFields = ['course_code', 'course_name', 'description', 'school_year', 'semester', 'schedule'];
+        foreach ($requiredFields as $field) {
+            if (empty($data[$field])) {
+                return $this->response->setJSON(['success' => false, 'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required']);
+            }
+        }
+
+        if ($courseModel->update($courseId, $data)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Course updated successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to update course']);
+        }
+    }
+
+    /**
+     * Delete teacher's course
+     */
+    public function teacherDeleteCourse()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'teacher') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied']);
+        }
+
+        $courseId = $this->request->getPost('course_id');
+        if (!$courseId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Course ID required']);
+        }
+
+        // Verify teacher owns this course
+        $teacherId = $session->get('userId');
+        $courseModel = new \App\Models\CourseModel();
+        $course = $courseModel->where('id', $courseId)->where('teacher_id', $teacherId)->first();
+        if (!$course) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Course not found or access denied']);
+        }
+
+        // Check if there are enrolled students
+        $enrollmentModel = new \App\Models\EnrollmentModel();
+        $enrolledCount = $enrollmentModel->where('course_id', $courseId)->countAllResults();
+        if ($enrolledCount > 0) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cannot delete course with enrolled students']);
+        }
+
+        if ($courseModel->delete($courseId)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Course deleted successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to delete course']);
         }
     }
 }

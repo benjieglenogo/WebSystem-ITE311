@@ -330,6 +330,26 @@ class Course extends BaseController
     }
 
     /**
+     * Get enrolled courses for current user (AJAX)
+     */
+    public function getEnrolledCourses()
+    {
+        $userId = session()->get('userId');
+        $enrollmentModel = new EnrollmentModel();
+        $courseModel = new CourseModel();
+        $userModel = new \App\Models\UserModel();
+
+        $enrolledCourses = $enrollmentModel->select('enrollments.*, courses.*, users.name as teacher_name')
+                                          ->join('courses', 'enrollments.course_id = courses.id')
+                                          ->join('users', 'courses.teacher_id = users.id', 'left')
+                                          ->where('enrollments.user_id', $userId)
+                                          ->orderBy('enrollments.enrollment_date', 'DESC')
+                                          ->findAll();
+
+        return $this->response->setJSON($enrolledCourses);
+    }
+
+    /**
      * Delete a course (Admin only)
      */
     public function delete()

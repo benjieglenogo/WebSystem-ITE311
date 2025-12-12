@@ -211,6 +211,9 @@ class Materials extends BaseController
         $materialModel = new MaterialModel();
         $materials = $materialModel->getMaterialsByCourse($courseId);
 
+        // Materials are displayed for all users (students can view/download)
+        // Additional permission check for downloads happens in download method
+
         // Check if this is an AJAX request for modal
         if ($this->request->isAJAX()) {
             // Return only the materials list HTML
@@ -231,7 +234,7 @@ class Materials extends BaseController
     public function download($materialId = null)
     {
         $session = session();
-        
+
         // Check if user is logged in
         if (! $session->get('isLoggedIn')) {
             return redirect()->to(base_url('login'));
@@ -268,6 +271,11 @@ class Materials extends BaseController
         if (!file_exists($filePath)) {
             return redirect()->back()->with('error', 'File not found on server.');
         }
+
+        // Create notification for successful download
+        $notificationModel = new \App\Models\NotificationModel();
+        $message = 'File "' . $material['file_name'] . '" downloaded successfully.';
+        $notificationModel->createNotification($userId, $message);
 
         // Download file
         return $this->response->download($filePath, null)->setFileName($material['file_name']);

@@ -177,11 +177,56 @@
 			transform: translateY(-5px);
 			box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 		}
+
+		/* Notification Styles */
+		.notification-dropdown {
+			min-width: 300px;
+		}
+
+		.notification-item {
+			padding: 10px 15px;
+			border-bottom: 1px solid #f1f1f1;
+			cursor: pointer;
+		}
+
+		.notification-item:hover {
+			background-color: #f8f9fa;
+		}
+
+		.notification-item.unread {
+			background-color: #e3f2fd;
+			border-left: 4px solid #007bff;
+		}
+
+		.notification-message {
+			font-size: 0.9rem;
+			margin-bottom: 5px;
+		}
+
+		.notification-time {
+			font-size: 0.8rem;
+			color: #6c757d;
+		}
 	</style>
 
 	<div class="dashboard-container">
 		<div class="dashboard-header">
 			<h1 class="dashboard-title">Course Management Dashboard</h1>
+			<div class="d-flex align-items-center">
+				<!-- Notification Bell -->
+				<div class="dropdown">
+					<button class="btn btn-outline-primary position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+						<i class="bi bi-bell-fill"></i>
+						<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none;"></span>
+					</button>
+					<ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+						<li><h6 class="dropdown-header">Notifications</h6></li>
+						<li><div class="px-3 py-2 text-muted small notification-content">Loading...</div></li>
+						<li><hr class="dropdown-divider"></li>
+						<li><a class="dropdown-item text-center" href="#">View all notifications</a></li>
+					</ul>
+				</div>
+			</div>
 		</div>
 
 		<!-- Success/Error Messages -->
@@ -319,6 +364,9 @@
                 <div class="btn-group" role="group" aria-label="Teacher navigation">
                     <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-primary">
                         <i class="bi bi-book"></i> My Courses
+                    </a>
+                    <a href="<?= base_url('teacher/course-management') ?>" class="btn btn-outline-primary">
+                        <i class="bi bi-gear"></i> Course Management
                     </a>
                     <a href="<?= base_url('teacher/students') ?>" class="btn btn-outline-primary">
                         <i class="bi bi-people"></i> Manage Students
@@ -959,6 +1007,79 @@ $(document).ready(function() {
 			},
 			error: function() {
 				alert('An error occurred while creating the course.');
+			}
+		});
+	});
+
+	// Load notifications
+	function loadNotifications() {
+		$.get('<?= base_url('notifications/get') ?>')
+		.done(function(data) {
+			if (data.success) {
+				updateNotificationBadge(data.unread_count);
+				updateNotificationDropdown(data.notifications);
+			}
+		})
+		.fail(function() {
+			console.log('Failed to load notifications');
+		});
+	}
+
+	function updateNotificationBadge(count) {
+		var $badge = $('.notification-count');
+		if (count > 0) {
+			$badge.text(count > 99 ? '99+' : count).show();
+		} else {
+			$badge.hide();
+		}
+	}
+
+	function updateNotificationDropdown(notifications) {
+		var $content = $('.notification-content');
+		$content.empty();
+
+		if (notifications.length > 0) {
+			notifications.forEach(function(notification) {
+				var itemClass = notification.is_read == 0 ? 'unread' : '';
+				var itemHtml = `
+					<div class="notification-item ${itemClass}" data-id="${notification.id}">
+						<div class="notification-message">${notification.message}</div>
+						<div class="notification-time">${formatDate(notification.created_at)}</div>
+					</div>
+				`;
+				$content.append(itemHtml);
+			});
+		} else {
+			$content.html('<em>No new notifications</em>');
+		}
+	}
+
+	function formatDate(dateString) {
+		var date = new Date(dateString);
+		var now = new Date();
+		var diff = now - date;
+		var minutes = Math.floor(diff / 60000);
+
+		if (minutes < 1) return 'Just now';
+		if (minutes < 60) return minutes + ' minutes ago';
+		if (minutes < 1440) return Math.floor(minutes / 60) + ' hours ago';
+		return Math.floor(minutes / 1440) + ' days ago';
+	}
+
+	// Load notifications on page load
+	loadNotifications();
+
+	// Refresh notifications every 30 seconds
+	setInterval(loadNotifications, 30000);
+
+	// Mark notification as read on click
+	$(document).on('click', '.notification-item', function() {
+		var notificationId = $(this).data('id');
+		$(this).removeClass('unread');
+		$.post('<?= base_url('notifications/mark_as_read/') ?>' + notificationId)
+		.done(function(data) {
+			if (data.success) {
+				loadNotifications(); // Refresh
 			}
 		});
 	});

@@ -36,6 +36,7 @@ $routes->get('/announcements', 'Announcement::index');
 
 // Course enrollment
 $routes->post('/course/enroll', 'Course::enroll');
+$routes->get('/course/enrolled', 'Course::getEnrolledCourses');
 // Course search (GET/POST) - AJAX or regular
 $routes->get('/courses/search', 'Course::search');
 $routes->post('/courses/search', 'Course::search');
@@ -56,8 +57,8 @@ $routes->get('/materials/download/(:num)', 'Materials::download/$1');
 $routes->post('/materials/forward', 'Materials::forward');
 
 // Notifications
-$routes->get('/notifications', 'Notifications::get');
-$routes->post('/notifications/mark_read/(:num)', 'Notifications::mark_as_read/$1');
+$routes->get('/notifications/get', 'Notifications::get');
+$routes->post('/notifications/mark_as_read/(:num)', 'Notifications::mark_as_read/$1');
 
 // Users Management (Admin only)
 $routes->get('/users', 'Users::index');
@@ -82,6 +83,15 @@ $routes->get('/teacher/students', 'Auth::manageStudents');
 $routes->get('/teacher/students/get', 'Auth::getStudentsForCourse');
 $routes->post('/teacher/students/update-status', 'Auth::updateStudentStatus');
 $routes->post('/teacher/students/remove', 'Auth::removeStudentFromCourse');
+
+// Teacher - Course Management
+$routes->get('/teacher/course-management', 'Auth::courseManagement');
+$routes->get('/teacher/course-management/get-students', 'Auth::getStudents');
+$routes->post('/teacher/course-management/create-course', 'Auth::teacherCreateCourse');
+$routes->post('/teacher/course-management/update-course', 'Auth::teacherUpdateCourse');
+$routes->post('/teacher/course-management/delete-course', 'Auth::teacherDeleteCourse');
+$routes->post('/teacher/course-management/update-status', 'Auth::updateStatus');
+$routes->post('/teacher/course-management/remove', 'Auth::remove');
 
 // Student - Course Enrollment Dashboard
 $routes->get('/student/courses', 'Auth::studentCourses');

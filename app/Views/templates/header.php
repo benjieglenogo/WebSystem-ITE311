@@ -91,6 +91,7 @@
               <li class="nav-item"><a class="nav-link" href="<?= site_url('dashboard') ?>">Course Management</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('announcements') ?>">Announcements</a></li>
             <?php elseif (session('userRole') === 'teacher'): ?>
+              <li class="nav-item"><a class="nav-link" href="#" onclick="teacherFunction()">Teacher Function</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('gradebook') ?>">Gradebook</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('assignments') ?>">Assignments</a></li>
             <?php elseif (session('userRole') === 'student'): ?>
@@ -300,6 +301,20 @@
           
           return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       }
+
+      // ==================== TEACHER FUNCTION ====================
+      // Function for teacher navigation with output
+      function teacherFunction() {
+          console.log('Teacher Function executed!');
+          console.log('Dashboard accessed by teacher: ', '<?= esc(session('userName') ?? 'Unknown') ?>');
+          console.log('Current time: ', new Date().toLocaleString());
+          console.log('Teacher role verified');
+
+          alert('Teacher Function executed!\n\nOutput:\n- Console logs with teacher info\n- Current time\n- Role verification\n\nCheck browser console for details!');
+      }
+
+      // Make the function globally accessible
+      window.teacherFunction = teacherFunction;
 
       // ==================== ENROLLMENT FUNCTIONS ====================
       

@@ -157,6 +157,36 @@
             font-size: 0.9rem;
         }
 
+        /* Notification Styles */
+        .notification-dropdown {
+            min-width: 300px;
+        }
+
+        .notification-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f1f1f1;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background-color: #e3f2fd;
+            border-left: 4px solid #007bff;
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .student-header {
@@ -174,7 +204,22 @@
     <div class="student-container">
         <div class="student-header">
             <h1 class="student-title">My Courses Dashboard</h1>
-            <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-secondary">Back to Dashboard</a>
+            <div class="d-flex align-items-center gap-2">
+                <!-- Notification Bell -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                        <i class="bi bi-bell-fill"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-count" style="display: none;"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown">
+                        <li><h6 class="dropdown-header">Notifications</h6></li>
+                        <li><div class="px-3 py-2 text-muted small notification-content">Loading...</div></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-center" href="#">View all notifications</a></li>
+                    </ul>
+                </div>
+                <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
         </div>
 
         <!-- Error Message -->
@@ -361,6 +406,7 @@ $(document).ready(function() {
     // Confirm enrollment
     $('#confirmEnrollBtn').click(function() {
         var courseId = $(this).data('course-id');
+        var $enrollBtn = $('.enroll-btn[data-course-id="' + courseId + '"]');
 
         $.post('<?= base_url('course/enroll') ?>', {
             course_id: courseId,
@@ -373,9 +419,11 @@ $(document).ready(function() {
                 $('#enrollmentModal').modal('hide');
                 $('#successModal').modal('show');
 
-                // Refresh the page to update enrollment status after modal is closed
+                // Update enrolled courses section without reload
                 $('#successModal').on('hidden.bs.modal', function() {
-                    location.reload();
+                    refreshEnrolledCourses();
+                    loadNotifications(); // Refresh notifications to see enrollment notification
+                    $enrollBtn.closest('.col-md-4').remove(); // Remove enrolled course from available list
                 });
             } else {
                 // Show error modal
@@ -453,6 +501,124 @@ $(document).ready(function() {
             // Reload all courses
             location.reload();
         }
+    });
+
+    // Refresh enrolled courses section
+    function refreshEnrolledCourses() {
+        $.get('<?= base_url('course/enrolled') ?>')
+        .done(function(enrolledCourses) {
+            var $enrolledCoursesSection = $('.enrolled-courses h3:contains("My Enrolled Courses")').closest('.enrolled-courses');
+            var $courseRow = $enrolledCoursesSection.find('.row');
+
+            $courseRow.empty(); // Clear existing courses
+
+            if (enrolledCourses.length > 0) {
+                enrolledCourses.forEach(function(course) {
+                    var courseCard = `
+                        <div class="col-md-4 mb-4">
+                            <div class="course-card">
+                                <div class="course-card-body">
+                                    <div class="course-title">${course.course_name || 'N/A'}</div>
+                                    <div class="course-code">${course.course_code || 'N/A'}</div>
+                                    <div class="course-description">${course.description || 'No description available.'}</div>
+
+                                    <div class="course-meta">
+                                        <span>${course.teacher_name || 'Unassigned'}</span>
+                                        <span>${course.schedule || 'N/A'}</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="/materials/course/${course.course_id}" class="btn btn-view">
+                                            <i class="bi bi-folder"></i> View Materials
+                                        </a>
+                                        <span class="badge bg-success">Enrolled</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    $courseRow.append(courseCard);
+                });
+            } else {
+                $courseRow.html('<div class="alert alert-info">You are not currently enrolled in any courses.</div>');
+            }
+        })
+        .fail(function() {
+            console.log('Failed to refresh enrolled courses');
+        });
+    }
+
+    // Load notifications
+    function loadNotifications() {
+        $.get('<?= base_url('notifications/get') ?>')
+        .done(function(data) {
+            if (data.success) {
+                updateNotificationBadge(data.unread_count);
+                updateNotificationDropdown(data.notifications);
+            }
+        })
+        .fail(function() {
+            console.log('Failed to load notifications');
+        });
+    }
+
+    function updateNotificationBadge(count) {
+        var $badge = $('.notification-count');
+        if (count > 0) {
+            $badge.text(count > 99 ? '99+' : count).show();
+        } else {
+            $badge.hide();
+        }
+    }
+
+    function updateNotificationDropdown(notifications) {
+        var $content = $('.notification-content');
+        $content.empty();
+
+        if (notifications.length > 0) {
+            notifications.forEach(function(notification) {
+                var itemClass = notification.is_read == 0 ? 'unread' : '';
+                var itemHtml = `
+                    <div class="notification-item ${itemClass}" data-id="${notification.id}">
+                        <div class="notification-message">${notification.message}</div>
+                        <div class="notification-time">${formatDate(notification.created_at)}</div>
+                    </div>
+                `;
+                $content.append(itemHtml);
+            });
+        } else {
+            $content.html('<em>No new notifications</em>');
+        }
+    }
+
+    function formatDate(dateString) {
+        var date = new Date(dateString);
+        var now = new Date();
+        var diff = now - date;
+        var minutes = Math.floor(diff / 60000);
+
+        if (minutes < 1) return 'Just now';
+        if (minutes < 60) return minutes + ' minutes ago';
+        if (minutes < 1440) return Math.floor(minutes / 60) + ' hours ago';
+        return Math.floor(minutes / 1440) + ' days ago';
+    }
+
+    // Load notifications on page load
+    loadNotifications();
+
+    // Refresh notifications every 30 seconds
+    setInterval(loadNotifications, 30000);
+
+    // Mark notification as read on click
+    $(document).on('click', '.notification-item', function() {
+        var notificationId = $(this).data('id');
+        $(this).removeClass('unread');
+        $.post('<?= base_url('notifications/mark_as_read/') ?>' + notificationId)
+        .done(function(data) {
+            if (data.success) {
+                loadNotifications(); // Refresh
+            }
+        });
     });
 });
 </script>
