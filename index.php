@@ -56,4 +56,30 @@ $paths = new Paths();
 // LOAD THE FRAMEWORK BOOTSTRAP FILE
 require $paths->systemDirectory . '/Boot.php';
 
+// Check for debugbar requests and handle them before normal bootstrapping
+if (isset($_GET['debugbar'])) {
+    // Serve the toolbarloader.js directly for ?debugbar requests
+    header('Content-Type: application/javascript');
+
+    // Read the toolbarloader.js file and replace the placeholder
+    $toolbarLoaderPath = $paths->systemDirectory . '/Debug/Toolbar/Views/toolbarloader.js';
+    if (file_exists($toolbarLoaderPath)) {
+        $content = file_get_contents($toolbarLoaderPath);
+        $content = str_replace('{url}', rtrim((isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . dirname($_SERVER['SCRIPT_NAME']), '/'), $content);
+        echo $content;
+        exit;
+    } else {
+        // Fallback if file not found
+        echo "console.error('Debugbar loader not found');";
+        exit;
+    }
+}
+
+if (isset($_GET['debugbar_time'])) {
+    // For debugbar_time requests, we need to serve the debugbar HTML
+    // This is more complex, so let's handle it through the normal flow
+    // but we'll set a flag to indicate it's a debugbar request
+    define('DEBUGBAR_TIME_REQUEST', true);
+}
+
 exit(Boot::bootWeb($paths));

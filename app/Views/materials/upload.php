@@ -34,7 +34,7 @@
                             </div>
                         <?php endif; ?>
 
-                        <?= form_open_multipart(base_url('admin/course/' . $course_id . '/upload')) ?>
+                        <form method="post" enctype="multipart/form-data" action="<?= base_url((session('userRole') === 'admin' ? 'admin' : 'teacher') . '/course/' . $course_id . '/upload') ?>">
                             <div class="mb-3">
                                 <label for="material_file" class="form-label">Select File</label>
                                 <input type="file" class="form-control" id="material_file" name="material_file" required>
@@ -57,7 +57,7 @@
                                     <i class="bi bi-arrow-left"></i> Back to Materials
                                 </a>
                             </div>
-                        <?= form_close() ?>
+                        </form>
                     </div>
                 </div>
             </div>

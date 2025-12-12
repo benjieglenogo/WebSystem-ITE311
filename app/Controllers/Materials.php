@@ -27,7 +27,7 @@ class Materials extends BaseController
             return redirect()->to(base_url('dashboard'))->with('error', 'You do not have permission to upload materials.');
         }
 
-        // Get course_id from route or POST
+        // Get course_id from route or POST first
         if ($courseId) {
             $course_id = $courseId;
         } else {
@@ -36,6 +36,17 @@ class Materials extends BaseController
 
         if (!$course_id) {
             return redirect()->back()->with('error', 'Course ID is required.');
+        }
+
+        // For teachers, check if they are assigned to this course
+        if ($userRole === 'teacher') {
+            $userId = $session->get('userId');
+            $courseModel = new CourseModel();
+            $course = $courseModel->find($course_id);
+
+            if (!$course || $course['teacher_id'] != $userId) {
+                return redirect()->to(base_url('dashboard'))->with('error', 'You can only upload materials to your assigned courses.');
+            }
         }
 
         // Verify course exists

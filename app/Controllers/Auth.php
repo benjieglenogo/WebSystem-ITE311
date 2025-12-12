@@ -237,6 +237,40 @@ class Auth extends BaseController
     }
 
     /**
+     * Student Courses Dashboard
+     */
+    public function studentCourses()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'student') {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Access denied. Student privileges required.');
+        }
+
+        $studentId = $session->get('userId');
+
+        $enrollModel = new \App\Models\EnrollmentModel();
+        $coursesModel = new \App\Models\CourseModel();
+
+        $enrolledCourses = $enrollModel
+            ->where('user_id', $studentId)
+            ->findAll();
+
+        if (empty($enrolledCourses)) {
+            return view('students/dashboard', ['error' => 'No enrolled courses found.']);
+        }
+
+        $courses = [];
+        foreach ($enrolledCourses as $enroll) {
+            $course = $coursesModel->find($enroll['course_id']);
+            if ($course) {
+                $courses[] = $course;
+            }
+        }
+
+        return view('students/dashboard', ['courses' => $courses]);
+    }
+
+    /**
      * User Management Dashboard (Admin only)
      */
     public function userManagement()

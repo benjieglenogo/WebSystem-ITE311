@@ -46,6 +46,8 @@ $routes->get('/courses', 'Course::index');
 // Materials
 $routes->get('/admin/course/(:num)/upload', 'Materials::upload/$1');
 $routes->post('/admin/course/(:num)/upload', 'Materials::upload/$1');
+$routes->get('/teacher/course/(:num)/upload', 'Materials::upload/$1');
+$routes->post('/teacher/course/(:num)/upload', 'Materials::upload/$1');
 $routes->get('/materials/course/(:num)', 'Materials::display/$1');
 $routes->get('/materials/delete/(:num)', 'Materials::delete/$1');
 $routes->get('/materials/download/(:num)', 'Materials::download/$1');
@@ -78,3 +80,7 @@ $routes->get('/teacher/students', 'Auth::manageStudents');
 $routes->get('/teacher/students/get', 'Auth::getStudentsForCourse');
 $routes->post('/teacher/students/update-status', 'Auth::updateStudentStatus');
 $routes->post('/teacher/students/remove', 'Auth::removeStudentFromCourse');
+
+// Student - Course Enrollment Dashboard
+$routes->get('/student/courses', 'Auth::studentCourses');
+$routes->post('/student/enroll', 'Course::enroll');

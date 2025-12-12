@@ -16,6 +16,10 @@ class EnrollmentModel extends Model
      */
     public function enrollUser($data)
     {
+        // Check if enrollment_date column exists, if not remove it from data
+        if (isset($data['enrollment_date']) && !$this->db->fieldExists('enrollment_date', 'enrollments')) {
+            unset($data['enrollment_date']);
+        }
         return $this->insert($data);
     }
 
@@ -24,8 +28,9 @@ class EnrollmentModel extends Model
      */
     public function getUserEnrollments($user_id)
     {
-        return $this->select('enrollments.*, courses.course_name, courses.description')
+        return $this->select('enrollments.*, courses.id as course_id, courses.course_name, courses.course_code, courses.description, courses.teacher_id, users.name as teacher_name')
                     ->join('courses', 'courses.id = enrollments.course_id')
+                    ->join('users', 'users.id = courses.teacher_id', 'left')
                     ->where('enrollments.user_id', $user_id)
                     ->findAll();
     }

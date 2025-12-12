@@ -343,6 +343,7 @@
                                 <th>Semester</th>
                                 <th>Schedule</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -360,11 +361,19 @@
                                                 <?= esc(ucfirst($course['status'] ?? 'N/A')) ?>
                                             </span>
                                         </td>
+                                        <td>
+                                            <a href="<?= base_url('materials/course/' . esc($course['id'])) ?>" class="btn btn-sm btn-info" title="View Materials">
+                                                <i class="bi bi-folder"></i> Materials
+                                            </a>
+                                            <a href="<?= base_url('teacher/course/' . esc($course['id']) . '/upload') ?>" class="btn btn-sm btn-success" title="Upload Material">
+                                                <i class="bi bi-upload"></i> Upload
+                                            </a>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted">No courses assigned</td>
+                                    <td colspan="8" class="text-center text-muted">No courses assigned</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -372,8 +381,66 @@
                 </div>
             </div>
 		<?php else: ?>
-			<div class="alert alert-info">
-				You don't have permission to access the Course Management Dashboard.
+			<!-- Student Navigation -->
+			<div class="mb-4">
+				<div class="btn-group" role="group" aria-label="Student navigation">
+					<a href="<?= base_url('student/courses') ?>" class="btn btn-outline-primary">
+						<i class="bi bi-book"></i> Browse & Enroll in Courses
+					</a>
+				</div>
+			</div>
+
+			<!-- Summary Cards -->
+			<div class="row mb-4">
+				<div class="col-md-6">
+					<div class="summary-card">
+						<p>Enrolled Courses</p>
+						<h3><?= isset($enrolledCourses) ? count($enrolledCourses) : 0 ?></h3>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="summary-card" style="border-left: 4px solid #28a745;">
+						<p>Available Materials</p>
+						<h3><?= isset($materials) ? count($materials) : 0 ?></h3>
+					</div>
+				</div>
+			</div>
+
+			<!-- Student's Enrolled Courses -->
+			<div class="courses-table">
+				<h3 class="mb-3">My Enrolled Courses</h3>
+				<div class="table-responsive">
+					<table class="table table-hover">
+						<thead>
+							<tr>
+								<th>Course Code</th>
+								<th>Course Title</th>
+								<th>Teacher</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php if (isset($enrolledCourses) && !empty($enrolledCourses)): ?>
+								<?php foreach ($enrolledCourses as $course): ?>
+									<tr>
+										<td><?= esc($course['course_code'] ?? 'N/A') ?></td>
+										<td><?= esc($course['course_name'] ?? 'N/A') ?></td>
+										<td><?= esc($course['teacher_name'] ?? 'Unassigned') ?></td>
+                                        <td>
+                                            <a href="<?= base_url('materials/course/' . esc($course['course_id'])) ?>" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-folder"></i> View Materials
+                                            </a>
+                                        </td>
+									</tr>
+								<?php endforeach; ?>
+							<?php else: ?>
+								<tr>
+									<td colspan="4" class="text-center text-muted">No enrolled courses found</td>
+								</tr>
+							<?php endif; ?>
+						</tbody>
+					</table>
+				</div>
 			</div>
 		<?php endif; ?>
 	</div>
