@@ -677,6 +677,105 @@ class Auth extends BaseController
     }
 
     /**
+     * Lock a user account (Admin only)
+     */
+    public function lockAccount()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied. Admin privileges required.']);
+        }
+
+        $userId = $this->request->getPost('user_id');
+        if (!$userId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'User ID is required.']);
+        }
+
+        $userModel = new \App\Models\UserModel();
+
+        // Check if the user is an admin and protected
+        $user = $userModel->find($userId);
+        if ($user && $user['role'] === 'admin' && isset($user['is_protected']) && $user['is_protected'] == 1) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cannot lock protected admin accounts.']);
+        }
+
+        if ($userModel->lockAccount($userId)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Account locked successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to lock account.']);
+        }
+    }
+
+    /**
+     * Unlock a user account (Admin only)
+     */
+    public function unlockAccount()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied. Admin privileges required.']);
+        }
+
+        $userId = $this->request->getPost('user_id');
+        if (!$userId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'User ID is required.']);
+        }
+
+        $userModel = new \App\Models\UserModel();
+        if ($userModel->unlockAccount($userId)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Account unlocked successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to unlock account.']);
+        }
+    }
+
+    /**
+     * Protect an admin account from being locked (Admin only)
+     */
+    public function protectAccount()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied. Admin privileges required.']);
+        }
+
+        $userId = $this->request->getPost('user_id');
+        if (!$userId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'User ID is required.']);
+        }
+
+        $userModel = new \App\Models\UserModel();
+        if ($userModel->protectAccount($userId)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Account protected successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to protect account.']);
+        }
+    }
+
+    /**
+     * Unprotect an account (Admin only)
+     */
+    public function unprotectAccount()
+    {
+        $session = session();
+        if (!$session->get('isLoggedIn') || $session->get('userRole') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied. Admin privileges required.']);
+        }
+
+        $userId = $this->request->getPost('user_id');
+        if (!$userId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'User ID is required.']);
+        }
+
+        $userModel = new \App\Models\UserModel();
+        if ($userModel->unprotectAccount($userId)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Account unprotected successfully!']);
+        } else {
+            return $this->response->setJSON(['success' => false, 'message' => 'Failed to unprotect account.']);
+        }
+    }
+
+    /**
      * Create a new course (Teacher only)
      */
     public function teacherCreateCourse()

@@ -202,6 +202,14 @@ class Users extends BaseController
             ])->setStatusCode(404);
         }
 
+        // Check if role can be edited using the new method
+        if (!$this->userModel->canEditRole($userId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Admin user role is locked and cannot be edited.'
+            ])->setStatusCode(403);
+        }
+
         // Prevent demoting protected admin
         if ($user['is_protected'] == 1 && $newRole !== 'admin') {
             return $this->response->setJSON([

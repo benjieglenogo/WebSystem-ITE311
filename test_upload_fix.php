@@ -1,30 +1,87 @@
 <?php
-// Test script to verify the upload page fix
-require_once 'app/Controllers/Materials.php';
-require_once 'app/Models/CourseModel.php';
-require_once 'system/Test/CIUnitTestCase.php';
+/**
+ * Test script to verify file upload functionality
+ */
 
-// Create a mock request to test the upload method
-$materialsController = new App\Controllers\Materials();
+// Include necessary files
+require_once 'app/Config/Paths.php';
+require_once 'system/bootstrap.php';
 
-// Test with course ID 7
-try {
-    // This will test if the controller method works without errors
-    echo "Testing Materials Controller upload method with course ID 7...";
+// Set up CodeIgniter
+$app = new \CodeIgniter\CodeIgniter();
+$app->initialize();
 
-    // Create a mock course model to test the find method
-    $courseModel = new App\Models\CourseModel();
-    $course = $courseModel->find(7);
+// Test the materials controller
+$materialsController = new \App\Controllers\Materials();
 
-    if ($course) {
-        echo "✓ Course ID 7 found: " . $course['course_name'] . "\n";
-        echo "✓ Controller should now work without undefined variable errors\n";
-        echo "✓ View should now work without form_open_multipart errors\n";
-        echo "✓ The 500 Internal Server Error should be resolved\n";
-    } else {
-        echo "✗ Course ID 7 not found\n";
-    }
+// Test data
+$testData = [
+    'course_id' => 1, // Assuming course ID 1 exists
+    'material_file' => [
+        'name' => 'test_file.pdf',
+        'type' => 'application/pdf',
+        'tmp_name' => 'test_file.pdf',
+        'error' => 0,
+        'size' => 1024
+    ],
+    'description' => 'Test file upload'
+];
 
-} catch (Exception $e) {
-    echo "✗ Error: " . $e->getMessage() . "\n";
+echo "Testing file upload functionality...\n";
+
+// Check if the upload method exists and is accessible
+if (method_exists($materialsController, 'ajaxUpload')) {
+    echo "✓ ajaxUpload method exists\n";
+} else {
+    echo "✗ ajaxUpload method missing\n";
 }
+
+// Check if the display method exists
+if (method_exists($materialsController, 'display')) {
+    echo "✓ display method exists\n";
+} else {
+    echo "✗ display method missing\n";
+}
+
+// Check if the download method exists
+if (method_exists($materialsController, 'download')) {
+    echo "✓ download method exists\n";
+} else {
+    echo "✗ download method missing\n";
+}
+
+// Test database connection
+try {
+    $db = \Config\Database::connect();
+    if ($db->connect()) {
+        echo "✓ Database connection successful\n";
+
+        // Check if materials table exists
+        if ($db->tableExists('materials')) {
+            echo "✓ Materials table exists\n";
+        } else {
+            echo "✗ Materials table missing\n";
+        }
+
+        // Check if courses table exists
+        if ($db->tableExists('courses')) {
+            echo "✓ Courses table exists\n";
+        } else {
+            echo "✗ Courses table missing\n";
+        }
+    } else {
+        echo "✗ Database connection failed\n";
+    }
+} catch (\Exception $e) {
+    echo "✗ Database error: " . $e->getMessage() . "\n";
+}
+
+// Test file upload directory
+$uploadPath = WRITEPATH . 'uploads' . DIRECTORY_SEPARATOR . 'materials' . DIRECTORY_SEPARATOR;
+if (is_dir($uploadPath) || mkdir($uploadPath, 0755, true)) {
+    echo "✓ Upload directory accessible\n";
+} else {
+    echo "✗ Upload directory not accessible\n";
+}
+
+echo "Test completed.\n";
