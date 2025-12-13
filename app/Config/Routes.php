@@ -84,3 +84,7 @@ $routes->post('/teacher/students/remove', 'Auth::removeStudentFromCourse');
 // Student - Course Enrollment Dashboard
 $routes->get('/student/courses', 'Auth::studentCourses');
 $routes->post('/student/enroll', 'Course::enroll');
+
+// Test routes - remove in production
+$routes->get('/test/enrollment', 'TestEnrollment::test');
+$routes->get('/test/reset', 'TestEnrollment::reset');

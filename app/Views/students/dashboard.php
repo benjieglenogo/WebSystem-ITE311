@@ -179,20 +179,109 @@
 
         <!-- Error Message -->
         <?php if (!empty($error)): ?>
-            <p class="text-danger"><?= $error ?></p>
+            <div class="alert alert-info">
+                <?= $error ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Success Message -->
+        <?php if (session()->getFlashdata('success')): ?>
+            <div class="alert alert-success">
+                <?= session()->getFlashdata('success') ?>
+            </div>
         <?php endif; ?>
 
         <!-- Enrolled Courses Section -->
-        <?php if (!empty($courses)): ?>
-            <?php foreach ($courses as $course): ?>
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <h5><?= $course['course_name'] ?></h5>
-                        <p><?= $course['description'] ?></p>
-                    </div>
+        <div class="enrolled-courses">
+            <h3 class="mb-3">My Enrolled Courses</h3>
+
+            <?php if (isset($enrolledCourses) && !empty($enrolledCourses)): ?>
+                <div class="row">
+                    <?php foreach ($enrolledCourses as $course): ?>
+                        <div class="col-md-4 mb-4">
+                            <div class="course-card">
+                                <div class="course-card-body">
+                                    <div class="course-title"><?= esc($course['course_name'] ?? 'N/A') ?></div>
+                                    <div class="course-code"><?= esc($course['course_code'] ?? 'N/A') ?></div>
+                                    <div class="course-description"><?= esc($course['description'] ?? 'No description available.') ?></div>
+
+                                    <div class="course-meta">
+                                        <span><?= esc($course['teacher_name'] ?? 'Unassigned') ?></span>
+                                        <span><?= esc($course['schedule'] ?? 'N/A') ?></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <a href="<?= base_url('materials/course/' . esc($course['course_id'])) ?>" class="btn btn-view">
+                                            <i class="bi bi-folder"></i> View Materials
+                                        </a>
+                                        <span class="badge bg-success">Enrolled</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+            <?php else: ?>
+                <div class="alert alert-info">
+                    You are not currently enrolled in any courses.
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Available Courses Section -->
+        <div class="enrolled-courses">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">Available Courses for Enrollment</h3>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-container mb-3">
+                <form id="courseSearchForm" class="d-flex">
+                    <input type="text" class="form-control search-input me-2" id="searchInput" placeholder="Search courses...">
+                    <button type="submit" class="btn btn-primary search-btn">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </form>
+            </div>
+
+            <div class="row" id="coursesContainer">
+                <?php if (isset($availableCourses) && !empty($availableCourses)): ?>
+                    <?php foreach ($availableCourses as $course): ?>
+                        <div class="col-md-4 mb-4">
+                            <div class="course-card">
+                                <div class="course-card-body">
+                                    <div class="course-title"><?= esc($course['course_name'] ?? 'N/A') ?></div>
+                                    <div class="course-code"><?= esc($course['course_code'] ?? 'N/A') ?></div>
+                                    <div class="course-description"><?= esc($course['description'] ?? 'No description available.') ?></div>
+
+                                    <div class="course-meta">
+                                        <span><?= esc($course['teacher_name'] ?? 'Unassigned') ?></span>
+                                        <span><?= esc($course['schedule'] ?? 'N/A') ?></span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <button class="btn btn-enroll enroll-btn"
+                                                data-course-id="<?= esc($course['id']) ?>"
+                                                data-course-name="<?= esc($course['course_name']) ?>">
+                                            <i class="bi bi-plus"></i> Enroll
+                                        </button>
+                                        <a href="<?= base_url('materials/course/' . esc($course['id'])) ?>" class="btn btn-view">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            No available courses for enrollment at this time.
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 
     <!-- Enrollment Confirmation Modal -->
@@ -210,6 +299,42 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="confirmEnrollBtn">Confirm Enrollment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="successModalLabel">Success</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="successMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">OK</button>
                 </div>
             </div>
         </div>
@@ -243,18 +368,27 @@ $(document).ready(function() {
         })
         .done(function(response) {
             if (response.success) {
-                // Show success message
-                alert(response.message);
+                // Show success modal
+                $('#successMessage').text(response.message);
                 $('#enrollmentModal').modal('hide');
+                $('#successModal').modal('show');
 
-                // Refresh the page to update enrollment status
-                location.reload();
+                // Refresh the page to update enrollment status after modal is closed
+                $('#successModal').on('hidden.bs.modal', function() {
+                    location.reload();
+                });
             } else {
-                alert('Error: ' + response.message);
+                // Show error modal
+                $('#errorMessage').text('Error: ' + response.message);
+                $('#enrollmentModal').modal('hide');
+                $('#errorModal').modal('show');
             }
         })
         .fail(function() {
-            alert('An error occurred while processing your enrollment. Please try again.');
+            // Show error modal for AJAX failure
+            $('#errorMessage').text('An error occurred while processing your enrollment. Please try again.');
+            $('#enrollmentModal').modal('hide');
+            $('#errorModal').modal('show');
         });
     });
 
@@ -324,11 +458,10 @@ $(document).ready(function() {
 </script>
 <?= $this->endSection() ?>
 <task_progress>
-- [x] Check if development server is running
-- [x] Verify student dashboard functionality
-- [x] Create student dashboard with enrollment
-- [ ] Add route for student dashboard
-- [ ] Update Auth controller for student dashboard
-- [ ] Test the enrollment process
+- [x] Analyze current code structure
+- [x] Examine existing course management files
+- [x] Identify issues in routes, controllers, models, and views
+- [ ] Fix enrollment functionality
+- [ ] Test the implementation
 </task_progress>
 </write_to_file>

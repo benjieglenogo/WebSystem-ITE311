@@ -237,7 +237,7 @@ class Auth extends BaseController
     }
 
     /**
-     * Student Courses Dashboard
+     * Student Courses Dashboard - Show enrolled courses
      */
     public function studentCourses()
     {
@@ -251,23 +251,26 @@ class Auth extends BaseController
         $enrollModel = new \App\Models\EnrollmentModel();
         $coursesModel = new \App\Models\CourseModel();
 
-        $enrolledCourses = $enrollModel
-            ->where('user_id', $studentId)
-            ->findAll();
+        try {
+            // Get enrolled courses with details
+            $enrolledCourses = $enrollModel->getUserEnrollments($studentId);
 
-        if (empty($enrolledCourses)) {
-            return view('students/dashboard', ['error' => 'No enrolled courses found.']);
+            // Get available courses for enrollment
+            $availableCourses = $coursesModel->getAvailableCourses($studentId);
+
+            return view('students/dashboard', [
+                'enrolledCourses' => $enrolledCourses ?? [],
+                'availableCourses' => $availableCourses ?? []
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Error in studentCourses: ' . $e->getMessage());
+            return view('students/dashboard', [
+                'enrolledCourses' => [],
+                'availableCourses' => [],
+                'error' => 'An error occurred while loading your courses. Please try again later.'
+            ]);
         }
-
-        $courses = [];
-        foreach ($enrolledCourses as $enroll) {
-            $course = $coursesModel->find($enroll['course_id']);
-            if ($course) {
-                $courses[] = $course;
-            }
-        }
-
-        return view('students/dashboard', ['courses' => $courses]);
     }
 
     /**

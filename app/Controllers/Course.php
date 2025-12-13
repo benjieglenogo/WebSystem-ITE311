@@ -46,7 +46,7 @@ class Course extends BaseController
         // Get course information for notification
         $courseModel = new CourseModel();
         $course = $courseModel->find($course_id);
-        
+
         if (!$course) {
             return $this->response->setJSON([
                 'success' => false,
@@ -61,22 +61,30 @@ class Course extends BaseController
             'enrollment_date' => date('Y-m-d H:i:s')
         ];
 
-        if ($enrollmentModel->enrollUser($data)) {
-            // Create notification for successful enrollment
-            $notificationModel = new NotificationModel();
-            $courseName = $course['course_name'] ?? 'the course';
-            $message = "You have been enrolled in {$courseName}";
-            
-            $notificationModel->createNotification($user_id, $message);
-            
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Successfully enrolled in the course!'
-            ]);
-        } else {
+        try {
+            if ($enrollmentModel->enrollUser($data)) {
+                // Create notification for successful enrollment
+                $notificationModel = new NotificationModel();
+                $courseName = $course['course_name'] ?? 'the course';
+                $message = "You have been enrolled in {$courseName}";
+
+                $notificationModel->createNotification($user_id, $message);
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Successfully enrolled in the course!'
+                ]);
+            } else {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to enroll in the course. Please try again.'
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Enrollment error: ' . $e->getMessage());
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Failed to enroll in the course. Please try again.'
+                'message' => 'An error occurred while processing your enrollment. Please try again.'
             ]);
         }
     }
@@ -90,12 +98,20 @@ class Course extends BaseController
         $courseModel = new CourseModel();
         $searchTerm = $this->request->getGet('search_term');
 
+        $builder = $courseModel->select('courses.*, users.name as teacher_name')
+                              ->join('users', 'users.id = courses.teacher_id', 'left')
+                              ->where('courses.status', 'active');
+
         if (!empty($searchTerm)) {
-            $courseModel->like('course_name', $searchTerm);
-            $courseModel->orLike('description', $searchTerm);
+            $builder->groupStart()
+                    ->like('courses.course_name', $searchTerm)
+                    ->orLike('courses.description', $searchTerm)
+                    ->orLike('courses.course_code', $searchTerm)
+                    ->orLike('users.name', $searchTerm)
+                    ->groupEnd();
         }
 
-        $courses = $courseModel->findAll();
+        $courses = $builder->findAll();
 
         return $this->response->setJSON($courses);
     }
