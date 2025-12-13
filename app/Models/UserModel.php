@@ -113,15 +113,15 @@ class UserModel extends Model
     }
 
     /**
-     * Check if admin role can be edited (should always return false for admin users)
+     * Check if admin role can be edited (only protected admin users cannot be edited)
      * @param int $userId
      * @return bool
      */
     public function canEditRole($userId)
     {
         $user = $this->find($userId);
-        if ($user && isset($user['role']) && $user['role'] === 'admin') {
-            return false; // Admin roles cannot be edited
+        if ($user && isset($user['is_protected']) && $user['is_protected'] == 1) {
+            return false; // Protected admin roles cannot be edited
         }
         return true;
     }

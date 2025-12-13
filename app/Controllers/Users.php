@@ -44,13 +44,16 @@ class Users extends BaseController
 
         $validation = \Config\Services::validation();
         $validation->setRules([
-            'name' => 'required|min_length[3]|max_length[100]',
+            'name' => 'required|min_length[3]|max_length[100]|regex_match[/^[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\s]+$/]',
             'email' => 'required|valid_email|is_unique[users.email]',
-            'password' => 'required|min_length[8]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/]',
+            'password' => 'required|min_length[8]|regex_match[/^(?=.*[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ])(?=.*\d)[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\d]+$/]',
             'role' => 'required|in_list[student,teacher,admin]',
         ], [
+            'name' => [
+                'regex_match' => 'Name can only contain letters and spaces.'
+            ],
             'password' => [
-                'regex_match' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+                'regex_match' => 'Password must contain at least one letter and one number, and can only contain letters and numbers.'
             ]
         ]);
 
@@ -268,20 +271,43 @@ class Users extends BaseController
         }
 
         // Validate password strength
-        if (strlen($newPassword) < 8 || !preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/', $newPassword)) {
+        if (strlen($newPassword) < 8 || !preg_match('/^(?=.*[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ])(?=.*\d)[a-zA-ZñÑáéíóúÁÉÍÓÚüÜ\d]+$/', $newPassword)) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+                'message' => 'Password must contain at least one letter and one number, and can only contain letters and numbers.'
             ])->setStatusCode(400);
         }
 
         $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
 
         if ($this->userModel->update($userId, ['password' => $passwordHash])) {
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Password updated successfully.'
-            ]);
+            // Check if the user being updated is currently logged in
+            $currentUserId = $session->get('userId');
+            $isCurrentUser = ($currentUserId == $userId);
+
+            if ($isCurrentUser) {
+                // Force logout the current user by destroying the session
+                $session->destroy();
+
+                // Create a new response with force_logout flag
+                $response = $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Password updated successfully. You have been logged out for security reasons.',
+                    'force_logout' => true
+                ]);
+
+                // Ensure session is properly destroyed before returning response
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_write_close();
+                }
+
+                return $response;
+            } else {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Password updated successfully.'
+                ]);
+            }
         }
 
         return $this->response->setJSON([

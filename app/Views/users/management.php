@@ -673,8 +673,14 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
-                    alert('Password changed successfully!');
-                    $('#changePasswordModal').modal('hide');
+                    if (response.force_logout) {
+                        // Show alert and redirect to login page
+                        alert(response.message);
+                        window.location.href = '<?= base_url('login') ?>';
+                    } else {
+                        alert('Password changed successfully!');
+                        $('#changePasswordModal').modal('hide');
+                    }
                 } else {
                     alert('Error: ' + (response.message || 'Failed to change password'));
                 }
