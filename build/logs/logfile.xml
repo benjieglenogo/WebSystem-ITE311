@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\xampp\htdocs\ITE311-GLENOGO\phpunit.xml.dist" tests="5" assertions="6" errors="0" failures="0" skipped="0" time="0.408850">
+    <testsuite name="App" tests="5" assertions="6" errors="0" failures="0" skipped="0" time="0.408850">
+      <testsuite name="ExampleDatabaseTest" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\database\ExampleDatabaseTest.php" tests="2" assertions="3" errors="0" failures="0" skipped="0" time="0.390149">
+        <testcase name="testModelFindAll" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\database\ExampleDatabaseTest.php" line="17" class="ExampleDatabaseTest" classname="ExampleDatabaseTest" assertions="1" time="0.222092"/>
+        <testcase name="testSoftDeleteLeavesRow" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\database\ExampleDatabaseTest.php" line="28" class="ExampleDatabaseTest" classname="ExampleDatabaseTest" assertions="2" time="0.168057"/>
+      </testsuite>
+      <testsuite name="ExampleSessionTest" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\session\ExampleSessionTest.php" tests="1" assertions="1" errors="0" failures="0" skipped="0" time="0.002323">
+        <testcase name="testSessionSimple" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\session\ExampleSessionTest.php" line="10" class="ExampleSessionTest" classname="ExampleSessionTest" assertions="1" time="0.002323"/>
+      </testsuite>
+      <testsuite name="HealthTest" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\unit\HealthTest.php" tests="2" assertions="2" errors="0" failures="0" skipped="0" time="0.016378">
+        <testcase name="testIsDefinedAppPath" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\unit\HealthTest.php" line="12" class="HealthTest" classname="HealthTest" assertions="1" time="0.002120"/>
+        <testcase name="testBaseUrlHasBeenSet" file="C:\xampp\htdocs\ITE311-GLENOGO\tests\unit\HealthTest.php" line="17" class="HealthTest" classname="HealthTest" assertions="1" time="0.014257"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

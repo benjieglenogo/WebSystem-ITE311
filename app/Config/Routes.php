@@ -40,6 +40,8 @@ $routes->get('/course/enrolled', 'Course::getEnrolledCourses');
 // Course search (GET/POST) - AJAX or regular
 $routes->get('/courses/search', 'Course::search');
 $routes->post('/courses/search', 'Course::search');
+$routes->get('/courses/search-enrolled', 'Course::searchEnrolled');
+$routes->post('/courses/search-enrolled', 'Course::searchEnrolled');
 
 // Courses page should render the index view (not the search JSON)
 $routes->get('/courses', 'Course::index');
@@ -58,6 +60,7 @@ $routes->post('/materials/forward', 'Materials::forward');
 
 // Notifications
 $routes->get('/notifications/get', 'Notifications::get');
+$routes->post('/notifications/mark_as_read', 'Notifications::mark_as_read');
 $routes->post('/notifications/mark_as_read/(:num)', 'Notifications::mark_as_read/$1');
 
 // Users Management (Admin only)
@@ -73,9 +76,12 @@ $routes->post('/users/delete', 'Users::delete');
 // Course Management (Admin only)
 $routes->post('/courses/create', 'Course::create');
 $routes->post('/courses/update', 'Course::update');
+$routes->post('/courses/update-course', 'Course::updateCourse');
 $routes->post('/courses/update-status', 'Course::updateStatus');
 $routes->post('/courses/delete', 'Course::delete');
+$routes->get('/courses/get', 'Course::get');
 $routes->get('/courses/get/(:num)', 'Course::get/$1');
+$routes->post('/courses/get', 'Course::get');
 $routes->get('/courses/teachers', 'Course::getTeachers');
 
 // Teacher - Manage Students
@@ -83,6 +89,9 @@ $routes->get('/teacher/students', 'Auth::manageStudents');
 $routes->get('/teacher/students/get', 'Auth::getStudentsForCourse');
 $routes->post('/teacher/students/update-status', 'Auth::updateStudentStatus');
 $routes->post('/teacher/students/remove', 'Auth::removeStudentFromCourse');
+
+// Teacher - Dashboard
+$routes->get('/teacher/dashboard/(:num)', 'Auth::teacherDashboard/$1');
 
 // Teacher - Course Management
 $routes->get('/teacher/course-management', 'Auth::courseManagement');

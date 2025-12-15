@@ -114,16 +114,38 @@
             margin-bottom: 20px;
         }
 
+        #courseSearchForm {
+            width: 100%;
+            max-width: 600px;
+        }
+
         .search-input {
             border-radius: 25px;
-            border: 1px solid #ced4da;
+            border: 2px solid #ced4da;
             padding-left: 15px;
+            padding-right: 15px;
+            height: 40px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
 
         .search-btn {
             border-radius: 25px;
             background-color: #007bff;
             border: none;
+            padding: 8px 25px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-btn:hover {
+            background-color: #0056b3;
         }
 
         /* Enrolled Courses Section */
@@ -238,10 +260,17 @@
 
         <!-- Enrolled Courses Section -->
         <div class="enrolled-courses">
-            <h3 class="mb-3">My Enrolled Courses</h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3 class="mb-0">My Enrolled Courses</h3>
+                <form id="enrolledCourseSearchForm" class="d-flex" method="post" style="max-width: 420px;">
+                    <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+                    <input type="text" id="enrolledSearchInput" class="form-control me-2" placeholder="Search enrolled courses...">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
 
             <?php if (isset($enrolledCourses) && !empty($enrolledCourses)): ?>
-                <div class="row">
+                <div class="row" id="enrolledCoursesContainer">
                     <?php foreach ($enrolledCourses as $course): ?>
                         <div class="col-md-4 mb-4">
                             <div class="course-card">
@@ -275,16 +304,18 @@
 
         <!-- Available Courses Section -->
         <div class="enrolled-courses">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="mb-0">Available Courses for Enrollment</h3>
-            </div>
+            <h3 class="mb-4">Available Courses for Enrollment</h3>
 
             <!-- Search Bar -->
-            <div class="search-container mb-3">
-                <form id="courseSearchForm" class="d-flex">
-                    <input type="text" class="form-control search-input me-2" id="searchInput" placeholder="Search courses...">
+            <div class="search-container">
+                <form id="courseSearchForm" class="d-flex flex-wrap align-items-center gap-2" method="post">
+                    <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+                    <input type="text" class="form-control search-input flex-grow-1" id="searchInput" placeholder="Search courses by name, code, teacher, or description..." style="min-width: 200px;">
                     <button type="submit" class="btn btn-primary search-btn">
                         <i class="bi bi-search"></i> Search
+                    </button>
+                    <button type="reset" class="btn btn-outline-secondary" title="Clear search">
+                        <i class="bi bi-x-circle"></i> Clear
                     </button>
                 </form>
             </div>
@@ -391,6 +422,8 @@
 $(document).ready(function() {
     // Initialize tooltips
     $('[title]').tooltip();
+    // Base path for materials links
+    var materialsBasePath = '<?= base_url('materials/course') ?>';
 
     // Enroll button click handler
     $(document).on('click', '.enroll-btn', function() {
@@ -447,8 +480,8 @@ $(document).ready(function() {
 
         $.ajax({
             url: '<?= base_url('courses/search') ?>',
-            type: 'GET',
-            data: { search_term: searchTerm },
+            type: 'POST',
+            data: { search_term: searchTerm, <?= csrf_token() ?>: '<?= csrf_hash() ?>' },
             success: function(data) {
                 var $coursesContainer = $('#coursesContainer');
                 $coursesContainer.empty();
@@ -474,7 +507,7 @@ $(document).ready(function() {
                                                     data-course-name="${course.course_name}">
                                                 <i class="bi bi-plus"></i> Enroll
                                             </button>
-                                            <a href="/materials/course/${course.id}" class="btn btn-view">
+                                            <a href="${materialsBasePath}/${course.id}" class="btn btn-view">
                                                 <i class="bi bi-eye"></i> View
                                             </a>
                                         </div>
@@ -495,12 +528,77 @@ $(document).ready(function() {
         });
     });
 
-    // Clear search when input is cleared
+    // Clear search when input is cleared - reload available courses via AJAX POST
     $('#searchInput').on('input', function() {
         if ($(this).val() === '') {
-            // Reload all courses
-            location.reload();
+            // Submit an empty search which returns the full available courses list for the student
+            $('#courseSearchForm').submit();
         }
+    });
+
+    // Enrolled courses search functionality
+    $('#enrolledCourseSearchForm').submit(function(e) {
+        e.preventDefault();
+        var searchTerm = $('#enrolledSearchInput').val();
+
+        $.ajax({
+            url: '<?= base_url('courses/search-enrolled') ?>',
+            type: 'POST',
+            data: { search_term: searchTerm, <?= csrf_token() ?>: '<?= csrf_hash() ?>' },
+            success: function(data) {
+                var $container = $('#enrolledCoursesContainer');
+                $container.empty();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    data.forEach(function(course) {
+                        var courseCard = `
+                            <div class="col-md-4 mb-4">
+                                <div class="course-card">
+                                    <div class="course-card-body">
+                                        <div class="course-title">${course.course_name || 'N/A'}</div>
+                                        <div class="course-code">${course.course_code || 'N/A'}</div>
+                                        <div class="course-description">${course.description || 'No description available.'}</div>
+
+                                        <div class="course-meta">
+                                            <span>${course.teacher_name || 'Unassigned'}</span>
+                                            <span></span>
+                                        </div>
+
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <a href="${materialsBasePath}/${course.course_id}" class="btn btn-view">
+                                                <i class="bi bi-folder"></i> View Materials
+                                            </a>
+                                            <span class="badge bg-success">Enrolled</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        $container.append(courseCard);
+                    });
+                } else {
+                    $container.html('<div class="col-12"><div class="alert alert-info">No enrolled courses match your search.</div></div>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Enrolled courses search error:', error);
+                $('#enrolledCoursesContainer').html('<div class="col-12"><div class="alert alert-danger">An error occurred while searching. Please try again.</div></div>');
+            }
+        });
+    });
+
+    // Clear search when input is cleared for enrolled courses
+    $('#enrolledSearchInput').on('input', function() {
+        if ($(this).val() === '') {
+            $('#enrolledCourseSearchForm').submit();
+        }
+    });
+
+    // Handle clear button for available courses search
+    $('#courseSearchForm').on('reset', function() {
+        setTimeout(function() {
+            $('#courseSearchForm').submit();
+        }, 10);
     });
 
     // Refresh enrolled courses section
@@ -528,7 +626,7 @@ $(document).ready(function() {
                                     </div>
 
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <a href="/materials/course/${course.course_id}" class="btn btn-view">
+                                        <a href="${materialsBasePath}/${course.course_id}" class="btn btn-view">
                                             <i class="bi bi-folder"></i> View Materials
                                         </a>
                                         <span class="badge bg-success">Enrolled</span>

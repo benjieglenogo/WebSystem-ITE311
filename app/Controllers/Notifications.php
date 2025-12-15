@@ -49,7 +49,7 @@ class Notifications extends BaseController
     /**
      * Mark a notification as read
      * 
-     * @param int $id Notification ID
+     * @param int $id Notification ID (from URL or POST)
      */
     public function mark_as_read($id = null)
     {
@@ -61,6 +61,11 @@ class Notifications extends BaseController
                 'success' => false,
                 'message' => 'Please log in to mark notifications as read.'
             ])->setStatusCode(401);
+        }
+
+        // Get ID from URL param or POST data
+        if (!$id) {
+            $id = $this->request->getPost('id');
         }
 
         if (!$id) {

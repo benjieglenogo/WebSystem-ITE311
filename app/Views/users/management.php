@@ -536,6 +536,10 @@
 
 <?= $this->section('scripts') ?>
 <script>
+// Store CSRF token for AJAX requests
+const csrfName = '<?= csrf_token() ?>';
+const csrfHash = '<?= csrf_hash() ?>';
+
 $(document).ready(function() {
     // Create user form submission
     $('#createUserForm').submit(function(e) {
@@ -599,35 +603,107 @@ $(document).ready(function() {
     // Edit user form submission
     $('#editUserForm').submit(function(e) {
         e.preventDefault();
+        
+        // Show loading state
+        const submitBtn = $(this).find('button[type="submit"]');
+        const originalBtnText = submitBtn.html();
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...');
 
-        const userId = $('#editUserId').val();
-        const newName = $('#editName').val();
-        const newRole = $('#editRole').val();
-        const newStatus = $('#editStatus').val();
+        // Get form data
+        const formData = {
+            user_id: $('#editUserId').val(),
+            name: $('#editName').val().trim(),
+            role: $('#editRole').val(),
+            status: $('#editStatus').val(),
+            [csrfName]: csrfHash // Using the global CSRF token variables
+        };
 
+        // Basic validation
+        if (!formData.name) {
+            alert('Please enter a valid name');
+            submitBtn.prop('disabled', false).html(originalBtnText);
+            return;
+        }
+
+        // Make AJAX request
         $.ajax({
             url: '<?= base_url('users/update') ?>',
             type: 'POST',
-            data: {
-                user_id: userId,
-                name: newName,
-                role: newRole,
-                status: newStatus,
-                <?= csrf_token() ?>: '<?= csrf_hash() ?>'
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfHash
             },
+            data: formData,
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
-                    alert('User updated successfully!');
+                    // Show success message
+                    const successAlert = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            User updated successfully!
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>`;
+                    $('.user-management-container').prepend(successAlert);
+                    
+                    // Close modal and refresh user list
                     $('#editUserModal').modal('hide');
-                    location.reload();
+                    
+                    // Update the row data attributes and content
+                    const row = $(`tr[data-user-id="${formData.user_id}"]`);
+                    if (row.length) {
+                        // Update data attributes
+                        row.attr('data-user-name', formData.name);
+                        row.attr('data-user-role', formData.role);
+                        row.attr('data-user-status', formData.status);
+                        
+                        // Update displayed values
+                        row.find('td:eq(1)').text(formData.name);
+                        row.find('td:eq(3)').html(`<span class="role-badge role-${formData.role}">${formData.role}</span>`);
+                        row.find('td:eq(4)').html(`<span class="status-badge status-${formData.status}">${formData.status}</span>`);
+                        
+                        // Update action buttons if status changed
+                        const actionCell = row.find('td:last-child');
+                        if (formData.status === 'active') {
+                            actionCell.find('.btn-toggle')
+                                .removeClass('activate-user-btn')
+                                .addClass('deactivate-user-btn')
+                                .html('<i class="fas fa-user-minus"></i> <span class="sr-only">Deactivate</span>')
+                                .attr('title', 'Deactivate user');
+                        } else {
+                            actionCell.find('.btn-toggle')
+                                .removeClass('deactivate-user-btn')
+                                .addClass('activate-user-btn')
+                                .html('<i class="fas fa-user-plus"></i> <span class="sr-only">Activate</span>')
+                                .attr('title', 'Activate user');
+                        }
+                    } else {
+                        // If row not found, reload the page
+                        location.reload();
+                    }
                 } else {
-                    alert('Error: ' + (response.message || 'Failed to update user'));
+                    // Show error message
+                    let errorMessage = response.message || 'Failed to update user';
+                    if (response.errors) {
+                        errorMessage = Object.values(response.errors).join('\n');
+                    }
+                    alert('Error: ' + errorMessage);
                 }
+                
+                // Re-enable submit button
+                submitBtn.prop('disabled', false).html(originalBtnText);
             },
             error: function(xhr, status, error) {
-                const response = xhr.responseJSON;
-                alert('Error: ' + (response ? response.message : 'Failed to update user'));
+                let errorMessage = 'Failed to update user. Please try again.';
+                if (xhr.responseJSON) {
+                    errorMessage = xhr.responseJSON.message || errorMessage;
+                    if (xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).join('\n');
+                    }
+                }
+                alert('Error: ' + errorMessage);
+                
+                // Re-enable submit button
+                submitBtn.prop('disabled', false).html(originalBtnText);
             }
         });
     });

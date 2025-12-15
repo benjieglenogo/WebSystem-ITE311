@@ -391,8 +391,15 @@
             </div>
 
             <!-- Teacher's Courses Table -->
-            <div class="courses-table">
-                <h3 class="mb-3">Your Courses</h3>
+			<div class="courses-table">
+				<div class="d-flex justify-content-between align-items-center mb-3">
+					<h3 class="mb-0">Your Courses</h3>
+					<form id="teacherCourseSearchForm" class="d-flex" method="post" style="max-width: 420px;">
+						<input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+						<input type="text" id="teacherSearchInput" class="form-control me-2" placeholder="Search your courses...">
+						<button type="submit" class="btn btn-primary">Search</button>
+					</form>
+				</div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -407,8 +414,8 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php if (isset($teacherCourses) && !empty($teacherCourses)): ?>
+						<tbody id="teacherCoursesTbody">
+							<?php if (isset($teacherCourses) && !empty($teacherCourses)): ?>
                                 <?php foreach ($teacherCourses as $course): ?>
                                     <tr>
                                         <td><?= esc($course['course_code'] ?? 'N/A') ?></td>
@@ -807,32 +814,38 @@ $(document).ready(function() {
 	// Add CSS class for pulse animation
 	$('head').append('<style>.bi-pulse { animation: pulse 1s infinite; } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }</style>');
 
-	// Edit course button click handler
-	$('.edit-course-btn').click(function() {
+	// Edit course button click handler - ADMIN VERSION
+	$('.edit-course-btn').click(function(e) {
+		e.preventDefault();
 		var courseId = $(this).data('course-id');
 		$('#editCourseId').val(courseId);
 
 		// Fetch course data from server
-		$.get('<?= base_url('courses/get/') ?>' + courseId)
-			.done(function(response) {
-				if (response.success) {
-					var course = response.course;
-					$('#editCourseCode').val(course.course_code);
-					$('#editCourseTitle').val(course.course_name);
-					$('#editDescription').val(course.description);
-					$('#editSchoolYear').val(course.school_year);
-					$('#editSemester').val(course.semester);
-					$('#editSchedule').val(course.schedule);
-					$('#editTeacher').val(course.teacher_id);
-					$('#editStartDate').val(course.start_date);
-					$('#editEndDate').val(course.end_date);
-				} else {
-					alert('Failed to load course data: ' + response.message);
+		$.get('<?= base_url('courses/get/') ?>' + courseId, function(response) {
+			if (response && response.success) {
+				var course = response.course;
+				if (course) {
+					$('#editCourseCode').val(course.course_code || '');
+					$('#editCourseTitle').val(course.course_name || '');
+					$('#editDescription').val(course.description || '');
+					$('#editSchoolYear').val(course.school_year || '');
+					$('#editSemester').val(course.semester || '');
+					$('#editSchedule').val(course.schedule || '');
+					$('#editTeacher').val(course.teacher_id || '');
+					$('#editStartDate').val(course.start_date || '');
+					$('#editEndDate').val(course.end_date || '');
+					
+					// Show the modal
+					var editModal = new bootstrap.Modal(document.getElementById('editCourseModal'), {backdrop: 'static'});
+					editModal.show();
 				}
-			})
-			.fail(function() {
-				alert('An error occurred while fetching course data.');
-			});
+			} else {
+				alert('Failed to load course data: ' + (response ? response.message : 'Unknown error'));
+			}
+		}).fail(function(xhr, status, error) {
+			console.error('Error loading course:', error);
+			alert('An error occurred while fetching course data. Error: ' + error);
+		});
 	});
 
 	// Edit course form submission with date validation
@@ -855,17 +868,26 @@ $(document).ready(function() {
 			data: $(this).serialize(),
 			dataType: 'json',
 			success: function(response) {
-				if (response.success) {
-					alert(response.message);
+				if (response && response.success) {
+					alert('Course updated successfully!');
 					$('#editCourseModal').modal('hide');
-					// Refresh the page to see changes
-					location.reload();
+					
+					// Check if a teacher was assigned
+					var teacherId = $('#editTeacher').val();
+					if (teacherId) {
+						// Redirect to that teacher's dashboard
+						window.location.href = '<?= base_url('teacher/dashboard/') ?>' + teacherId;
+					} else {
+						// Reload current page if no teacher assigned
+						location.reload();
+					}
 				} else {
-					alert('Error: ' + response.message);
+					alert('Error: ' + (response ? response.message : 'Unknown error'));
 				}
 			},
-			error: function() {
-				alert('An error occurred while updating the course.');
+			error: function(xhr, status, error) {
+				console.error('Error updating course:', error);
+				alert('An error occurred while updating the course. Error: ' + error);
 			}
 		});
 	});
@@ -1082,6 +1104,60 @@ $(document).ready(function() {
 				loadNotifications(); // Refresh
 			}
 		});
+	});
+
+	// Teacher course search
+	$('#teacherCourseSearchForm').on('submit', function(e) {
+		e.preventDefault();
+		var searchTerm = $('#teacherSearchInput').val();
+		$.ajax({
+			url: '<?= base_url('courses/search') ?>',
+			type: 'POST',
+			data: { search_term: searchTerm, <?= csrf_token() ?>: '<?= csrf_hash() ?>' },
+			success: function(data) {
+				var $tbody = $('#teacherCoursesTbody');
+				$tbody.empty();
+				if (Array.isArray(data) && data.length > 0) {
+					data.forEach(function(course) {
+						var statusClass = (course.status === 'active') ? 'bg-success' : 'bg-secondary';
+						var row = `
+							<tr>
+								<td>${course.course_code || 'N/A'}</td>
+								<td>${course.course_name || 'N/A'}</td>
+								<td>${course.description || 'N/A'}</td>
+								<td>${course.school_year || 'N/A'}</td>
+								<td>${course.semester || 'N/A'}</td>
+								<td>${course.schedule || 'N/A'}</td>
+								<td>
+									<span class="badge ${statusClass}">${(course.status ? course.status.charAt(0).toUpperCase() + course.status.slice(1) : 'N/A')}</span>
+								</td>
+								<td>
+									<button onclick="showMaterialsModal(${course.id}, '${(course.course_name || '').replace("'", "\\'")}', true)" class="btn btn-sm btn-info" title="View Materials">
+										<i class="bi bi-folder"></i> Materials
+									</button>
+									<a href="<?= base_url('teacher/course') ?>/${course.id}/upload" class="btn btn-sm btn-success" title="Upload Material">
+										<i class="bi bi-upload"></i> Upload
+									</a>
+								</td>
+							</tr>
+						`;
+						$tbody.append(row);
+					});
+				} else {
+					$tbody.html('<tr><td colspan="8" class="text-center text-muted">No courses assigned</td></tr>');
+				}
+			},
+			error: function() {
+				console.error('Error searching for teacher courses.');
+			}
+		});
+	});
+
+	// Submit empty search on input clear
+	$('#teacherSearchInput').on('input', function() {
+		if ($(this).val() === '') {
+			$('#teacherCourseSearchForm').submit();
+		}
 	});
 });
 </script>

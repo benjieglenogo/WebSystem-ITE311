@@ -207,7 +207,12 @@
     <div class="course-management-container">
         <div class="course-management-header">
             <h1 class="course-management-title">Course Management</h1>
-            <div>
+            <div class="d-flex gap-2 align-items-center">
+                <form id="teacherManageSearchForm" class="d-flex" method="post" style="max-width: 420px;">
+                    <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+                    <input type="text" id="teacherManageSearchInput" class="form-control me-2" placeholder="Search your courses...">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
                 <button class="btn btn-primary me-2 btn-create-course">+ Add New Course</button>
                 <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-secondary">Back to Dashboard</a>
             </div>
@@ -229,6 +234,7 @@
         <?php endif; ?>
 
         <?php if (!empty($teacherCourses)): ?>
+            <div id="teacherCourseCards">
             <?php foreach ($teacherCourses as $course): ?>
                 <div class="course-card">
                     <div class="course-header">
@@ -280,6 +286,7 @@
                     </div>
                 </div>
             <?php endforeach; ?>
+            </div>
         <?php else: ?>
             <div class="empty-state">
                 <i class="bi bi-book-x"></i>
@@ -558,13 +565,14 @@ $(document).ready(function() {
 
         $.get('<?= base_url('teacher/course-management/get-students') ?>', {course_id: courseId})
             .done(function(response) {
-                if (response.success) {
+                if (response && response.success) {
                     renderStudentsTable(response.students);
                 } else {
                     $('#studentsContent').html('<div class="alert alert-info">No students enrolled in this course.</div>');
                 }
             })
-            .fail(function() {
+            .fail(function(xhr, status, error) {
+                console.error('Load students error:', status, error);
                 $('#studentsContent').html('<div class="alert alert-danger">Failed to load students. Please try again.</div>');
             });
     }
@@ -637,7 +645,7 @@ $(document).ready(function() {
         var formData = new FormData(this);
 
         // Show loading
-        $('button[type="submit"]').prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Uploading...');
+        $('button[type="submit"]', this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Uploading...');
 
         $.ajax({
             url: '<?= base_url('materials/ajax-upload') ?>',
@@ -647,7 +655,7 @@ $(document).ready(function() {
             contentType: false,
             dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                if (response && response.success) {
                     alert('Material uploaded successfully!');
                     $('#uploadModal').modal('hide');
                     // Refresh materials if modal is open
@@ -658,21 +666,23 @@ $(document).ready(function() {
                         }
                     }
                 } else {
-                    alert('Error: ' + (response.message || 'Upload failed'));
+                    alert('Error: ' + (response?.message || 'Upload failed'));
                 }
             },
-            error: function(xhr) {
+            error: function(xhr, status, error) {
                 var message = 'Upload failed. Please try again.';
                 try {
                     var response = JSON.parse(xhr.responseText);
                     if (response.message) {
                         message = response.message;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.error('Parse error:', error);
+                }
                 alert(message);
             },
             complete: function() {
-                $('button[type="submit"]').prop('disabled', false).html('Upload');
+                $('button[type="submit"]', '#uploadForm').prop('disabled', false).html('Upload');
             }
         });
     });
@@ -691,15 +701,16 @@ $(document).ready(function() {
                 '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
             })
             .done(function(response) {
-                if (response.success) {
+                if (response && response.success) {
                     alert('Student status updated!');
                     // Reload students
                     loadStudents(courseId, $('#modalCourseName').text());
                 } else {
-                    alert('Error: ' + (response.message || 'Update failed'));
+                    alert('Error: ' + (response?.message || 'Update failed'));
                 }
             })
-            .fail(function() {
+            .fail(function(xhr, status, error) {
+                console.error('Update status error:', status, error);
                 alert('An error occurred while updating student status.');
             });
         }
@@ -714,15 +725,16 @@ $(document).ready(function() {
                 '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
             })
             .done(function(response) {
-                if (response.success) {
+                if (response && response.success) {
                     alert('Student removed from course!');
                     // Reload students
                     loadStudents(courseId, $('#modalCourseName').text());
                 } else {
-                    alert('Error: ' + (response.message || 'Removal failed'));
+                    alert('Error: ' + (response?.message || 'Removal failed'));
                 }
             })
-            .fail(function() {
+            .fail(function(xhr, status, error) {
+                console.error('Remove student error:', status, error);
                 alert('An error occurred while removing the student.');
             });
         }
@@ -738,56 +750,100 @@ $(document).ready(function() {
     // Show edit course modal
     window.showEditCourseModal = function(courseId, courseName) {
         // Load course data
-        $.get('<?= base_url('courses/get') ?>/' + courseId)
+        $.get('<?= base_url('courses/get') ?>', { course_id: courseId })
             .done(function(response) {
-                if (response.success) {
+                if (response && response.success && response.course) {
                     var course = response.course;
                     $('#editCourseId').val(course.id);
-                    $('#editCourseCode').val(course.course_code);
-                    $('#editCourseName').val(course.course_name);
-                    $('#editDescription').val(course.description);
-                    $('#editSchoolYear').val(course.school_year);
-                    $('#editSemester').val(course.semester);
-                    $('#editSchedule').val(course.schedule);
-                    $('#editStartDate').val(course.start_date);
-                    $('#editEndDate').val(course.end_date);
-                    $('#editStatus').val(course.status);
+                    $('#editCourseCode').val(course.course_code || '');
+                    $('#editCourseName').val(course.course_name || '');
+                    $('#editDescription').val(course.description || '');
+                    $('#editSchoolYear').val(course.school_year || '');
+                    $('#editSemester').val(course.semester || '');
+                    $('#editSchedule').val(course.schedule || '');
+                    $('#editStartDate').val(course.start_date || '');
+                    $('#editEndDate').val(course.end_date || '');
+                    $('#editStatus').val(course.status || 'active');
 
                     $('#editCourseModalLabel').text('Edit Course - ' + course.course_name);
                     $('#editCourseModal').modal('show');
                 } else {
-                    alert('Failed to load course data');
+                    alert('Failed to load course data: ' + (response?.message || 'Unknown error'));
                 }
             })
-            .fail(function() {
-                alert('An error occurred while loading course data');
+            .fail(function(xhr, status, error) {
+                console.error('Failed to load course:', status, error);
+                alert('An error occurred while loading course data. Please try again.');
             });
     };
+
+    // Handle Edit Course Form Submission
+    $('#editCourseForm').submit(function(e) {
+        e.preventDefault();
+
+        var formData = {
+            course_id: $('#editCourseId').val(),
+            course_code: $('#editCourseCode').val(),
+            course_name: $('#editCourseName').val(),
+            description: $('#editDescription').val(),
+            school_year: $('#editSchoolYear').val(),
+            semester: $('#editSemester').val(),
+            schedule: $('#editSchedule').val(),
+            start_date: $('#editStartDate').val(),
+            end_date: $('#editEndDate').val(),
+            status: $('#editStatus').val(),
+            '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+        };
+
+        $('button[type="submit"]', this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Updating...');
+
+        $.ajax({
+            url: '<?= base_url('courses/update-course') ?>',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            success: function(response) {
+                if (response && response.success) {
+                    alert('Course updated successfully!');
+                    $('#editCourseModal').modal('hide');
+                    location.reload(); // Refresh the page to see changes
+                } else {
+                    alert('Error: ' + (response?.message || 'Failed to update course'));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Update course error:', status, error);
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    alert('Error: ' + (response.message || 'Update failed'));
+                } catch (e) {
+                    alert('An error occurred while updating the course. Please try again.');
+                }
+            },
+            complete: function() {
+                $('button[type="submit"]', '#editCourseForm').prop('disabled', false).html('Update Course');
+            }
+        });
+    });
 
     // Delete course
     window.deleteCourse = function(courseId, courseName) {
         if (confirm('Are you sure you want to delete the course "' + courseName + '"? This action cannot be undone and will remove all associated data.')) {
-            // Show loading
-            var button = $('button[onclick="deleteCourse(' + courseId + ', \'' + courseName.replace(/'/g, "\\'") + '\')"]');
-            button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Deleting...');
-
             $.post('<?= base_url('teacher/course-management/delete-course') ?>', {
                 course_id: courseId,
                 '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
             })
             .done(function(response) {
-                if (response.success) {
+                if (response && response.success) {
                     alert('Course deleted successfully!');
                     location.reload(); // Refresh the page
                 } else {
-                    alert('Error: ' + (response.message || 'Failed to delete course'));
+                    alert('Error: ' + (response?.message || 'Failed to delete course'));
                 }
             })
-            .fail(function() {
+            .fail(function(xhr, status, error) {
+                console.error('Delete course error:', status, error);
                 alert('An error occurred while deleting the course');
-            })
-            .always(function() {
-                button.prop('disabled', false).html('<i class="bi bi-trash"></i> Delete Course');
             });
         }
     };
@@ -805,22 +861,24 @@ $(document).ready(function() {
             data: $(this).serialize(),
             dataType: 'json',
             success: function(response) {
-                if (response.success) {
+                if (response && response.success) {
                     alert('Course created successfully!');
                     $('#createCourseModal').modal('hide');
                     location.reload(); // Refresh the page
                 } else {
-                    alert('Error: ' + (response.message || 'Failed to create course'));
+                    alert('Error: ' + (response?.message || 'Failed to create course'));
                 }
             },
-            error: function(xhr) {
+            error: function(xhr, status, error) {
                 var message = 'Failed to create course. Please try again.';
                 try {
                     var response = JSON.parse(xhr.responseText);
                     if (response.message) {
                         message = response.message;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.error('Parse error:', error);
+                }
                 alert(message);
             },
             complete: function() {
@@ -864,6 +922,75 @@ $(document).ready(function() {
                 $('button[type="submit"]', '#editCourseForm').prop('disabled', false).html('Update Course');
             }
         });
+    });
+    // Teacher course management search
+    $('#teacherManageSearchForm').on('submit', function(e) {
+        e.preventDefault();
+        var searchTerm = $('#teacherManageSearchInput').val();
+        $.ajax({
+            url: '<?= base_url('courses/search') ?>',
+            type: 'POST',
+            data: { search_term: searchTerm, <?= csrf_token() ?>: '<?= csrf_hash() ?>' },
+            success: function(data) {
+                var $container = $('#teacherCourseCards');
+                if (!Array.isArray(data) || data.length === 0) {
+                    $container.html('<div class="empty-state"><i class="bi bi-book-x"></i><h4>No Courses Assigned</h4><p>You haven\'t been assigned any courses yet. Contact an administrator to assign courses to you.</p></div>');
+                    return;
+                }
+                var html = '';
+                data.forEach(function(course) {
+                    var statusClass = (course.status === 'active') ? 'bg-success' : 'bg-secondary';
+                    html += `<div class="course-card">
+                                <div class="course-header">
+                                    <div class="course-title">${course.course_name || 'N/A'}</div>
+                                    <div class="course-code">Code: ${course.course_code || 'N/A'}</div>
+                                    <div class="school-year-badge">Year: ${course.school_year || 'N/A'} | Semester: ${course.semester || 'N/A'}</div>
+                                </div>
+                                <div class="course-details">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <strong>Description:</strong><br>${course.description || 'No description available'}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Schedule:</strong><br>${course.schedule || 'N/A'}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <strong>Status:</strong><br>
+                                            <span class="badge ${statusClass}">${(course.status ? course.status.charAt(0).toUpperCase() + course.status.slice(1) : 'N/A')}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="course-actions">
+                                    <div>
+                                        <button class="btn btn-manage btn-students" data-course-id="${course.id}" data-course-name="${(course.course_name || '').replace(/'/g, "\\'")}"><i class="bi bi-people"></i> View Students</button>
+                                        <button class="btn btn-manage btn-materials" data-course-id="${course.id}" data-course-name="${(course.course_name || '').replace(/'/g, "\\'")}"><i class="bi bi-folder"></i> View Materials</button>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-manage btn-upload" data-course-id="${course.id}" data-course-name="${(course.course_name || '').replace(/'/g, "\\'")}"><i class="bi bi-upload"></i> Upload Material</button>
+                                        <button class="btn btn-manage btn-warning" data-course-id="${course.id}" data-course-name="${(course.course_name || '').replace(/'/g, "\\'")}"><i class="bi bi-pencil"></i> Edit Course</button>
+                                        <button class="btn btn-manage btn-danger" data-course-id="${course.id}" data-course-name="${(course.course_name || '').replace(/'/g, "\\'")}"><i class="bi bi-trash"></i> Delete Course</button>
+                                    </div>
+                                </div>
+                             </div>`;
+                });
+                $container.html(html);
+                // Rebind events on new buttons
+                $('.btn-manage.btn-students').on('click', function() { loadStudents($(this).data('course-id'), $(this).data('course-name')); });
+                $('.btn-manage.btn-materials').on('click', function() { showMaterialsModal($(this).data('course-id'), $(this).data('course-name'), true); });
+                $('.btn-manage.btn-upload').on('click', function() { showUploadModal($(this).data('course-id'), $(this).data('course-name')); });
+                $('.btn-manage.btn-warning').on('click', function() { showEditCourseModal($(this).data('course-id'), $(this).data('course-name')); });
+                $('.btn-manage.btn-danger').on('click', function() { deleteCourse($(this).data('course-id'), $(this).data('course-name')); });
+            },
+            error: function() {
+                console.error('Error searching teacher courses.');
+            }
+        });
+    });
+
+    $('#teacherManageSearchInput').on('input', function() {
+        if ($(this).val() === '') {
+            $('#teacherManageSearchForm').submit();
+        }
     });
 });
 </script>

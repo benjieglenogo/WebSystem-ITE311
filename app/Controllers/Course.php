@@ -97,11 +97,39 @@ class Course extends BaseController
     public function search()
     {
         $courseModel = new CourseModel();
-        $searchTerm = $this->request->getGet('search_term');
+        $searchTerm = $this->request->getVar('search_term');
 
         $builder = $courseModel->select('courses.*, users.name as teacher_name')
-                              ->join('users', 'users.id = courses.teacher_id', 'left')
-                              ->where('courses.status', 'active');
+                      ->join('users', 'users.id = courses.teacher_id', 'left');
+
+        // If a student is performing the search, exclude courses they're already enrolled in
+        try {
+            $session = session();
+            $userRole = $session->get('userRole');
+            $userId = (int) $session->get('userId');
+
+            if ($userRole === 'student' && $userId) {
+                $enrollmentModel = new \App\Models\EnrollmentModel();
+                $enrolledCourseRows = $enrollmentModel->select('course_id')
+                    ->where('user_id', $userId)
+                    ->findAll();
+                $enrolledIds = array_column($enrolledCourseRows, 'course_id');
+                if (!empty($enrolledIds)) {
+                    $builder->whereNotIn('courses.id', $enrolledIds);
+                }
+            }
+
+            // If user is a teacher, limit search to their assigned courses (allow inactive courses too)
+            if ($userRole === 'teacher' && $userId) {
+                $builder->where('courses.teacher_id', $userId);
+            } else {
+                // Non-teacher users should only see active courses by default
+                $builder->where('courses.status', 'active');
+            }
+        } catch (\Exception $e) {
+            // On any error while checking enrollments, proceed without excluding
+            log_message('warning', 'Search: failed to determine enrolled courses - ' . $e->getMessage());
+        }
 
         if (!empty($searchTerm)) {
             $builder->groupStart()
@@ -112,9 +140,9 @@ class Course extends BaseController
                     ->groupEnd();
         }
 
-        $courses = $builder->findAll();
+        $courses = $builder->findAll() ?? [];
 
-        return $this->response->setJSON($courses);
+        return $this->response->setJSON(array_values($courses));
     }
 
     /**
@@ -129,10 +157,22 @@ class Course extends BaseController
     }
 
     /**
-     * Get course details by ID (AJAX)
+     * Get course details by ID (AJAX) - works for both admin and teacher
      */
-    public function get($courseId)
+    public function get($courseId = null)
     {
+        // Support both URL param and query string
+        if (!$courseId) {
+            $courseId = $this->request->getVar('course_id') ?? $this->request->getPost('course_id');
+        }
+
+        if (!$courseId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course ID is required.'
+            ])->setStatusCode(400);
+        }
+
         $courseModel = new CourseModel();
         $course = $courseModel->find($courseId);
 
@@ -140,13 +180,88 @@ class Course extends BaseController
             return $this->response->setJSON([
                 'success' => false,
                 'message' => 'Course not found.'
-            ]);
+            ])->setStatusCode(404);
         }
 
         return $this->response->setJSON([
             'success' => true,
             'course' => $course
         ]);
+    }
+
+    /**
+     * Update course details - works for both admin and teacher for their own courses
+     */
+    public function updateCourse()
+    {
+        $courseId = $this->request->getPost('course_id');
+        if (!$courseId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course ID is required.'
+            ])->setStatusCode(400);
+        }
+
+        $courseModel = new CourseModel();
+        $course = $courseModel->find($courseId);
+
+        if (!$course) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Course not found.'
+            ])->setStatusCode(404);
+        }
+
+        // Check permission: admin can update any, teacher can update their own
+        $userRole = session()->get('userRole');
+        $userId = session()->get('userId');
+        
+        if ($userRole === 'teacher' && (int)$course['teacher_id'] !== (int)$userId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'You do not have permission to update this course.'
+            ])->setStatusCode(403);
+        }
+
+        $data = [
+            'course_code' => $this->request->getPost('course_code'),
+            'course_name' => $this->request->getPost('course_name'),
+            'description' => $this->request->getPost('description'),
+            'school_year' => $this->request->getPost('school_year'),
+            'semester' => $this->request->getPost('semester'),
+            'schedule' => $this->request->getPost('schedule'),
+            'status' => $this->request->getPost('status') ?? 'active',
+            'start_date' => $this->request->getPost('start_date'),
+            'end_date' => $this->request->getPost('end_date')
+        ];
+
+        // Only admin can change teacher assignment
+        if ($userRole === 'admin' && $this->request->getPost('teacher_id')) {
+            $data['teacher_id'] = $this->request->getPost('teacher_id');
+        }
+
+        // Validate required fields
+        $requiredFields = ['course_code', 'course_name', 'description', 'school_year', 'semester', 'schedule'];
+        foreach ($requiredFields as $field) {
+            if (empty($data[$field])) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => ucfirst(str_replace('_', ' ', $field)) . ' is required.'
+                ])->setStatusCode(400);
+            }
+        }
+
+        if ($courseModel->update($courseId, $data)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Course updated successfully!'
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to update course. Please try again.'
+            ])->setStatusCode(500);
+        }
     }
 
     /**
@@ -347,6 +462,42 @@ class Course extends BaseController
                                           ->findAll();
 
         return $this->response->setJSON($enrolledCourses);
+    }
+
+    /**
+     * Search enrolled courses for current student (AJAX)
+     */
+    public function searchEnrolled()
+    {
+        if (!session()->get('isLoggedIn') || session()->get('userRole') !== 'student') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied.'
+            ])->setStatusCode(403);
+        }
+
+        $userId = session()->get('userId');
+        $searchTerm = $this->request->getVar('search_term');
+
+        $enrollmentModel = new EnrollmentModel();
+
+        $builder = $enrollmentModel->select('enrollments.*, courses.id as course_id, courses.course_name, courses.course_code, courses.description, courses.teacher_id, users.name as teacher_name')
+                                   ->join('courses', 'courses.id = enrollments.course_id')
+                                   ->join('users', 'users.id = courses.teacher_id', 'left')
+                                   ->where('enrollments.user_id', $userId);
+
+        if (!empty($searchTerm)) {
+            $builder->groupStart()
+                    ->like('courses.course_name', $searchTerm)
+                    ->orLike('courses.description', $searchTerm)
+                    ->orLike('courses.course_code', $searchTerm)
+                    ->orLike('users.name', $searchTerm)
+                    ->groupEnd();
+        }
+
+        $courses = $builder->findAll() ?? [];
+
+        return $this->response->setJSON(array_values($courses));
     }
 
     /**

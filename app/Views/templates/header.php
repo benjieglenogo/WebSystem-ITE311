@@ -169,15 +169,21 @@
       
       // Function to fetch and update notifications
       function fetchNotifications() {
-          $.get('<?= base_url('notifications') ?>')
+          $.get('<?= base_url('notifications/get') ?>')
               .done(function(response) {
-                  if (response.success) {
-                      updateNotificationBadge(response.unread_count);
-                      updateNotificationList(response.notifications);
+                  if (response && response.success) {
+                      updateNotificationBadge(response.unread_count || 0);
+                      updateNotificationList(response.notifications || []);
+                  } else {
+                      console.warn('Notifications response invalid:', response);
+                      $('#noNotifications').show();
+                      $('#notificationList').html('<div class="px-3 py-2 text-muted text-center">Unable to load notifications</div>');
                   }
               })
-              .fail(function() {
-                  console.error('Failed to fetch notifications');
+              .fail(function(xhr, status, error) {
+                  console.error('Failed to fetch notifications:', status, error);
+                  $('#noNotifications').show();
+                  $('#notificationList').html('<div class="px-3 py-2 text-muted text-center">Error loading notifications</div>');
               });
       }
 
