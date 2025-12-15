@@ -25,6 +25,22 @@ $routes->post('/register', 'Auth::register');
 // Announcements
 $routes->get('/announcements', 'Announcement::index');
 
+// Assignments
+$routes->get('/assignments', 'Assignments::index');
+$routes->post('/assignments/create', 'Assignments::create');
+$routes->get('/assignments/(:num)', 'Assignments::view/$1');
+$routes->post('/assignments/(:num)/submit', 'Assignments::submit/$1');
+
+// Grades
+$routes->get('/grades', 'Grades::index');
+$routes->get('/grades/(:num)', 'Grades::view/$1');
+$routes->post('/grades/(:num)', 'Grades::update/$1');
+
+// Gradebook
+$routes->get('/gradebook', 'Gradebook::index');
+$routes->get('/gradebook/course/(:num)', 'Gradebook::viewCourse/$1');
+$routes->post('/gradebook/course/(:num)/update', 'Gradebook::updateGrades/$1');
+
 // Role-specific dashboards - commented out until controllers are created
 // $routes->group('admin', ['filter' => 'roleAuth'], function ($routes) {
 //     $routes->get('dashboard', 'Admin::dashboard');
@@ -91,6 +107,7 @@ $routes->post('/teacher/students/update-status', 'Auth::updateStudentStatus');
 $routes->post('/teacher/students/remove', 'Auth::removeStudentFromCourse');
 
 // Teacher - Dashboard
+$routes->get('/teacher/dashboard', 'Auth::teacherDashboard');
 $routes->get('/teacher/dashboard/(:num)', 'Auth::teacherDashboard/$1');
 
 // Teacher - Course Management

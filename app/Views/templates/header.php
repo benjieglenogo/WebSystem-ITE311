@@ -91,7 +91,6 @@
               <li class="nav-item"><a class="nav-link" href="<?= site_url('dashboard') ?>">Course Management</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('announcements') ?>">Announcements</a></li>
             <?php elseif (session('userRole') === 'teacher'): ?>
-              <li class="nav-item"><a class="nav-link" href="#" onclick="teacherFunction()">Teacher Function</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('gradebook') ?>">Gradebook</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('assignments') ?>">Assignments</a></li>
             <?php elseif (session('userRole') === 'student'): ?>

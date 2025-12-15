@@ -901,4 +901,51 @@ class Auth extends BaseController
             return $this->response->setJSON(['success' => false, 'message' => 'Failed to delete course']);
         }
     }
+
+    /**
+     * Teacher Dashboard - Show courses for a specific teacher
+     */
+    public function teacherDashboard($teacherId = null)
+    {
+        $session = session();
+        
+        // Redirect if not logged in
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to(base_url('login'));
+        }
+
+        // Redirect if not a teacher
+        if ($session->get('role') !== 'teacher') {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Only teachers can access this page');
+        }
+
+        // Use current logged-in user if no ID provided
+        if (!$teacherId) {
+            $teacherId = $session->get('user_id');
+        }
+
+        // Get teacher information
+        $userModel = new \App\Models\UserModel();
+        $teacher = $userModel->find($teacherId);
+
+        if (!$teacher || $teacher['role'] !== 'teacher') {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Teacher not found');
+        }
+
+        // Get all courses assigned to this teacher
+        $courseModel = new \App\Models\CourseModel();
+        $teacherCourses = $courseModel->where('teacher_id', $teacherId)->findAll();
+
+        // Count statistics
+        $data = [
+            'teacher' => $teacher,
+            'courses' => $teacherCourses ?? [],
+            'courseCount' => count($teacherCourses ?? []),
+            'activeCourses' => count(array_filter($teacherCourses ?? [], function($c) { 
+                return $c['status'] === 'active'; 
+            }))
+        ];
+
+        return view('teacher/dashboard', $data);
+    }
 }
