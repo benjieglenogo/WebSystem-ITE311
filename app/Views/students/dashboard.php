@@ -419,11 +419,15 @@
 
 <?= $this->section('scripts') ?>
 <script>
-$(document).ready(function() {
-    // Initialize tooltips
-    $('[title]').tooltip();
-    // Base path for materials links
-    var materialsBasePath = '<?= base_url('materials/course') ?>';
+// Ensure jQuery is loaded before executing code
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery is not loaded! Please ensure jQuery CDN is available.');
+} else {
+    $(document).ready(function() {
+        // Initialize tooltips
+        $('[title]').tooltip();
+        // Base path for materials links
+        var materialsBasePath = '<?= base_url('materials/course') ?>';
 
     // Enroll button click handler
     $(document).on('click', '.enroll-btn', function() {
@@ -718,7 +722,8 @@ $(document).ready(function() {
             }
         });
     });
-});
+    });  // End of $(document).ready()
+}  // End of jQuery check
 </script>
 <?= $this->endSection() ?>
 <task_progress>

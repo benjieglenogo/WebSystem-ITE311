@@ -750,9 +750,14 @@
 
 <?= $this->section('scripts') ?>
 <script>
-$(document).ready(function() {
-	// Initialize tooltips for all icon buttons
-	$('[title]').tooltip();
+// Ensure jQuery is loaded before executing code
+if (typeof jQuery === 'undefined') {
+	console.error('jQuery is not loaded! Please ensure jQuery CDN is available.');
+	// Fallback to vanilla JavaScript if jQuery doesn't load
+} else {
+	$(document).ready(function() {
+		// Initialize tooltips for all icon buttons
+		$('[title]').tooltip();
 
 	// Make navigation icons functional with visual feedback
 	$('.btn-primary, .btn-info, .btn-success').on('click', function(e) {
@@ -1159,6 +1164,7 @@ $(document).ready(function() {
 			$('#teacherCourseSearchForm').submit();
 		}
 	});
-});
+	});  // End of $(document).ready()
+}  // End of jQuery check
 </script>
 <?= $this->endSection() ?>

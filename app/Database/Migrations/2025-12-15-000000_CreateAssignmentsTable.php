@@ -5,7 +5,7 @@ namespace App\Database\Migrations;
 use CodeIgniter\Database\Migration;
 use CodeIgniter\Database\RawSql;
 
-class CreateSubmissionsTable extends Migration
+class CreateAssignmentsTable extends Migration
 {
     public function up()
     {
@@ -15,48 +15,38 @@ class CreateSubmissionsTable extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'assignment_id' => [
+            'course_id' => [
                 'type' => 'INT',
                 'unsigned' => true,
             ],
-            'student_id' => [
-                'type' => 'INT',
-                'unsigned' => true,
+            'title' => [
+                'type'       => 'VARCHAR',
+                'constraint' => '255',
             ],
-            'submission_text' => [
+            'description' => [
                 'type' => 'TEXT',
                 'null' => true,
             ],
-            'file_path' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '255',
-                'null' => true,
+            'due_date' => [
+                'type' => 'DATETIME',
             ],
-            'submitted_at' => [
+            'created_at' => [
                 'type'    => 'DATETIME',
                 'default' => new RawSql('CURRENT_TIMESTAMP'),
             ],
-            'grade' => [
-                'type' => 'DECIMAL',
-                'constraint' => '5,2',
-                'null' => true,
-            ],
-            'feedback' => [
-                'type' => 'TEXT',
-                'null' => true,
-            ],
-            'graded_at' => [
+            'updated_at' => [
                 'type'    => 'DATETIME',
                 'null'    => true,
                 'default' => null,
+                'on_update' => new RawSql('CURRENT_TIMESTAMP'),
             ],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('submissions');
+        $this->forge->createTable('assignments');
     }
 
     public function down()
     {
-        $this->forge->dropTable('submissions');
+        $this->forge->dropTable('assignments');
     }
 }

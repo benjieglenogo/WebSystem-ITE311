@@ -30,6 +30,8 @@ $routes->get('/assignments', 'Assignments::index');
 $routes->post('/assignments/create', 'Assignments::create');
 $routes->get('/assignments/(:num)', 'Assignments::view/$1');
 $routes->post('/assignments/(:num)/submit', 'Assignments::submit/$1');
+$routes->get('/assignments/(:num)/submissions', 'Assignments::submissions/$1');
+$routes->post('/assignments/save-grade', 'Assignments::saveGrade');
 
 // Grades
 $routes->get('/grades', 'Grades::index');
@@ -53,6 +55,12 @@ $routes->post('/gradebook/course/(:num)/update', 'Gradebook::updateGrades/$1');
 // Course enrollment
 $routes->post('/course/enroll', 'Course::enroll');
 $routes->get('/course/enrolled', 'Course::getEnrolledCourses');
+
+// Enrollment management (approval/rejection) - Admin only now
+$routes->get('/enrollment/pending', 'Enrollment::pendingRequests');
+$routes->post('/enrollment/(:num)/approve', 'Enrollment::approveRequest/$1');
+$routes->post('/enrollment/(:num)/reject', 'Enrollment::rejectRequest/$1');
+$routes->post('/enrollment/(:num)/unenroll', 'Enrollment::unenroll/$1');
 // Course search (GET/POST) - AJAX or regular
 $routes->get('/courses/search', 'Course::search');
 $routes->post('/courses/search', 'Course::search');

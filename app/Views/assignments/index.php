@@ -180,24 +180,30 @@
 									Due: <?= date('M d, Y', strtotime($assignment['due_date'] ?? 'now')) ?>
 								</span>
 							</div>
-							<div class="assignment-actions">
-								<a href="<?= base_url('assignments/' . ($assignment['id'] ?? '#')) ?>" class="btn btn-sm btn-primary">
-									<i class="bi bi-eye"></i> View Details
-								</a>
-								<?php if ($userRole === 'student'): ?>
-									<button class="btn btn-sm btn-success" onclick="submitAssignment(<?= $assignment['id'] ?? '#' ?>)">
-										<i class="bi bi-upload"></i> Submit
-									</button>
-								<?php endif; ?>
-								<?php if ($userRole === 'teacher' || $userRole === 'admin'): ?>
-									<button class="btn btn-sm btn-warning" onclick="editAssignment(<?= $assignment['id'] ?? '#' ?>)">
-										<i class="bi bi-pencil"></i> Edit
-									</button>
-									<button class="btn btn-sm btn-danger" onclick="deleteAssignment(<?= $assignment['id'] ?? '#' ?>)">
-										<i class="bi bi-trash"></i> Delete
-									</button>
-								<?php endif; ?>
-							</div>
+                            <div class="assignment-actions">
+                                <a href="<?= base_url('assignments/' . ($assignment['id'] ?? '#')) ?>" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                                <?php if ($userRole === 'student'): ?>
+                                    <a href="<?= base_url('assignments/' . ($assignment['id'] ?? '#')) ?>" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> View Submission
+                                    </a>
+                                    <button class="btn btn-sm btn-success" onclick="submitAssignment(<?= $assignment['id'] ?? '#' ?>)">
+                                        <i class="bi bi-upload"></i> Submit
+                                    </button>
+                                <?php endif; ?>
+                                <?php if ($userRole === 'teacher' || $userRole === 'admin'): ?>
+                                    <a href="<?= base_url('assignments/' . ($assignment['id'] ?? '#') . '/submissions') ?>" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> View Submissions
+                                    </a>
+                                    <button class="btn btn-sm btn-warning" onclick="editAssignment(<?= $assignment['id'] ?? '#' ?>)">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteAssignment(<?= $assignment['id'] ?? '#' ?>)">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                <?php endif; ?>
+                            </div>
 						</div>
 					<?php endforeach; ?>
 				</div>

@@ -59,26 +59,27 @@ class Course extends BaseController
         $data = [
             'user_id' => $user_id,
             'course_id' => $course_id,
-            'enrollment_date' => date('Y-m-d H:i:s')
+            'enrollment_date' => date('Y-m-d H:i:s'),
+            'status' => 'pending'
         ];
 
         try {
             if ($enrollmentModel->enrollUser($data)) {
-                // Create notification for successful enrollment
+                // Create notification for enrollment request
                 $notificationModel = new NotificationModel();
                 $courseName = $course['course_name'] ?? 'the course';
-                $message = "You have been enrolled in {$courseName}";
+                $message = "Your enrollment request for {$courseName} has been submitted and is pending approval.";
 
                 $notificationModel->createNotification($user_id, $message);
 
                 return $this->response->setJSON([
                     'success' => true,
-                    'message' => 'Successfully enrolled in the course!'
+                    'message' => 'Enrollment request submitted. Approval is required to enroll in this course.'
                 ]);
             } else {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'Failed to enroll in the course. Please try again.'
+                    'message' => 'Failed to submit enrollment request. Please try again.'
                 ]);
             }
         } catch (\Exception $e) {
@@ -152,8 +153,26 @@ class Course extends BaseController
     {
         $courseModel = new CourseModel();
         $courses = $courseModel->findAll();
+        
+        $session = session();
+        $userId = $session->get('user_id') ?? $session->get('userId');
+        $isLoggedIn = $session->get('isLoggedIn');
+        
+        // Get enrollment status for logged-in students
+        $enrollmentStatus = [];
+        if ($isLoggedIn && !empty($userId)) {
+            $enrollmentModel = new \App\Models\EnrollmentModel();
+            foreach ($courses as $course) {
+                $status = $enrollmentModel->getEnrollmentStatus($userId, $course['id']);
+                $enrollmentStatus[$course['id']] = $status;
+            }
+        }
 
-        return view('courses/index', ['courses' => $courses]);
+        return view('courses/index', [
+            'courses' => $courses,
+            'enrollmentStatus' => $enrollmentStatus,
+            'isLoggedIn' => $isLoggedIn
+        ]);
     }
 
     /**

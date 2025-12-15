@@ -207,15 +207,14 @@
     <div class="course-management-container">
         <div class="course-management-header">
             <h1 class="course-management-title">Course Management</h1>
-            <div class="d-flex gap-2 align-items-center">
-                <form id="teacherManageSearchForm" class="d-flex" method="post" style="max-width: 420px;">
-                    <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
-                    <input type="text" id="teacherManageSearchInput" class="form-control me-2" placeholder="Search your courses...">
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </form>
-                <button class="btn btn-primary me-2 btn-create-course">+ Add New Course</button>
-                <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-secondary">Back to Dashboard</a>
-            </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <form id="teacherManageSearchForm" class="d-flex" method="post" style="max-width: 420px;">
+                        <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
+                        <input type="text" id="teacherManageSearchInput" class="form-control me-2" placeholder="Search your courses...">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </form>
+                    <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-secondary">Back to Dashboard</a>
+                </div>
         </div>
 
         <!-- Success/Error Messages -->
@@ -273,6 +272,9 @@
                             </button>
                         </div>
                         <div>
+                            <button class="btn btn-manage btn-success" data-course-id="<?= $course['id'] ?>" data-course-name="<?= esc(str_replace("'", "\\'", $course['course_name'])) ?>">
+                                <i class="bi bi-plus-circle"></i> Add Assignment
+                            </button>
                             <button class="btn btn-manage btn-upload" data-course-id="<?= $course['id'] ?>" data-course-name="<?= esc($course['course_name']) ?>">
                                 <i class="bi bi-upload"></i> Upload Material
                             </button>
@@ -516,14 +518,57 @@
         </div>
     </div>
 
+    <!-- Add Assignment Modal -->
+    <div class="modal fade" id="addAssignmentModal" tabindex="-1" aria-labelledby="addAssignmentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="addAssignmentModalLabel">
+                        <i class="bi bi-plus-circle"></i> Create New Assignment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAssignmentForm">
+                        <input type="hidden" id="assignmentCourseId" name="course_id">
+                        <?= csrf_field() ?>
+                        <div class="mb-3">
+                            <label for="assignmentTitle" class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="assignmentTitle" name="title" placeholder="e.g., Chapter 5 Review" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="assignmentDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="assignmentDescription" name="description" rows="4" placeholder="Assignment details and instructions..."></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="assignmentDueDate" class="form-label">Due Date <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="assignmentDueDate" name="due_date" required>
+                        </div>
+
+                        <div id="formMessage"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="submitAssignmentBtn">
+                        <i class="bi bi-check-circle"></i> Create Assignment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Include Materials Modal -->
     <?= $this->include('materials/modal') ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
 <script>
+// Wait for jQuery to be loaded and document to be ready
 $(document).ready(function() {
-    // Bind button clicks using jQuery
+        // Bind button clicks using jQuery
     $('.btn-manage.btn-students').on('click', function() {
         const courseId = $(this).data('course-id');
         const courseName = $(this).data('course-name');
@@ -542,6 +587,12 @@ $(document).ready(function() {
         showUploadModal(courseId, courseName);
     });
 
+    $('.btn-manage.btn-success').on('click', function() {
+        const courseId = $(this).data('course-id');
+        const courseName = $(this).data('course-name');
+        showAddAssignmentModal(courseId, courseName);
+    });
+
     $('.btn-manage.btn-warning').on('click', function() {
         const courseId = $(this).data('course-id');
         const courseName = $(this).data('course-name');
@@ -552,10 +603,6 @@ $(document).ready(function() {
         const courseId = $(this).data('course-id');
         const courseName = $(this).data('course-name');
         deleteCourse(courseId, courseName);
-    });
-
-    $('.btn-create-course').on('click', function() {
-        showCreateCourseModal();
     });
 
     // Load students for a course
@@ -637,6 +684,67 @@ $(document).ready(function() {
             alert('Materials modal not available. Please check your setup.');
         }
     };
+
+    // Show add assignment modal
+    window.showAddAssignmentModal = function(courseId, courseName) {
+        $('#addAssignmentModalLabel').text('Create New Assignment for ' + courseName);
+        $('#assignmentCourseId').val(courseId);
+        $('#createAssignmentForm')[0].reset();
+        $('#formMessage').html('');
+        $('#addAssignmentModal').modal('show');
+    };
+
+        // Handle assignment form submission
+        $('#submitAssignmentBtn').on('click', function() {
+            const title = $('#assignmentTitle').val().trim();
+            const courseId = $('#assignmentCourseId').val();
+            const dueDate = $('#assignmentDueDate').val();
+            const description = $('#assignmentDescription').val().trim();
+
+            if (!title || !courseId || !dueDate) {
+                $('#formMessage').html('<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> Please fill in all required fields</div>');
+                return;
+            }
+
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Creating...');
+
+            // Use jQuery AJAX with proper CSRF token handling
+            $.ajax({
+                url: '<?= base_url('assignments/create') ?>',
+                type: 'POST',
+                data: $('#createAssignmentForm').serialize(),
+                dataType: 'json',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': $('input[name="<?= csrf_token() ?>"]').val()
+                },
+                success: function(data) {
+                    if (data.success) {
+                        $('#formMessage').html('<div class="alert alert-success"><i class="bi bi-check-circle"></i> ' + data.message + '</div>');
+                        $('#createAssignmentForm')[0].reset();
+                        setTimeout(() => {
+                            $('#addAssignmentModal').modal('hide');
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        $('#formMessage').html('<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> ' + (data.message || 'Error creating assignment') + '</div>');
+                        $('#submitAssignmentBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Create Assignment');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', status, error);
+                    $('#formMessage').html('<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> An error occurred while creating the assignment</div>');
+                    $('#submitAssignmentBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Create Assignment');
+                }
+            });
+        });
+
+    // Clear form message when modal is closed
+    $('#addAssignmentModal').on('hidden.bs.modal', function() {
+        $('#createAssignmentForm')[0].reset();
+        $('#formMessage').html('');
+        $('#submitAssignmentBtn').prop('disabled', false).html('<i class="bi bi-check-circle"></i> Create Assignment');
+    });
 
     // Handle file upload form submission
     $('#uploadForm').submit(function(e) {
@@ -992,6 +1100,6 @@ $(document).ready(function() {
             $('#teacherManageSearchForm').submit();
         }
     });
-});
+    });  // End of $(document).ready
 </script>
 <?= $this->endSection() ?>

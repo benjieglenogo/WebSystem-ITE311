@@ -89,6 +89,7 @@
             <?php if (session('userRole') === 'admin'): ?>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('users/management') ?>">User Management</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('dashboard') ?>">Course Management</a></li>
+              <li class="nav-item"><a class="nav-link" href="<?= site_url('enrollment/pending') ?>">Enrollment Requests</a></li>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('announcements') ?>">Announcements</a></li>
             <?php elseif (session('userRole') === 'teacher'): ?>
               <li class="nav-item"><a class="nav-link" href="<?= site_url('gradebook') ?>">Gradebook</a></li>

@@ -98,8 +98,17 @@
 						<?= nl2br(esc($assignment['description'] ?? 'No description provided')) ?>
 					</div>
 
-					<!-- Submission Form (for students) -->
-					<?php if (session()->get('role') === 'student'): ?>
+                    <!-- View Submissions Button (for teachers) -->
+                    <?php if (session()->get('role') === 'teacher' || session()->get('role') === 'admin'): ?>
+                        <div class="mb-4">
+                            <a href="<?= base_url('assignments/' . ($assignment['id'] ?? '#') . '/submissions') ?>" class="btn btn-primary">
+                                <i class="bi bi-eye"></i> View Submissions
+                            </a>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Submission Form (for students) -->
+                    <?php if (session()->get('role') === 'student'): ?>
 						<div class="submission-form">
 							<h3>Submit Your Assignment</h3>
 							<form id="submissionForm">
